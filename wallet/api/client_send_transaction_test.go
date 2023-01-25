@@ -155,15 +155,8 @@ func testSendingTransactionWithValidParamsSucceeds(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 	txHash := vgrand.RandomStr(64)
-	latestBlock := types.LastBlock{
-		ChainID:                         vgrand.RandomStr(5),
-		BlockHeight:                     100,
-		BlockHash:                       vgrand.RandomStr(64),
-		ProofOfWorkHashFunction:         "sha3_24_rounds",
-		ProofOfWorkDifficulty:           2,
-		ProofOfWorkPastBlocks:           2,
-		ProofOfWorkTxPerBlock:           2,
-		ProofOfWorkIncreasingDifficulty: false,
+	stats := types.SpamStatistics{
+		ChainID: vgrand.RandomStr(5),
 	}
 
 	// setup
@@ -175,11 +168,9 @@ func testSendingTransactionWithValidParamsSucceeds(t *testing.T) {
 	handler.walletStore.EXPECT().GetWallet(ctx, wallet1.Name()).Times(1).Return(wallet1, nil)
 	handler.interactor.EXPECT().RequestTransactionReviewForSending(ctx, traceID, hostname, wallet1.Name(), kp.PublicKey(), fakeTransaction, gomock.Any()).Times(1).Return(true, nil)
 	handler.nodeSelector.EXPECT().Node(ctx, gomock.Any()).Times(1).Return(handler.node, nil)
-	handler.node.EXPECT().LastBlock(ctx).Times(1).Return(latestBlock, nil)
-	handler.proofOfWork.EXPECT().Generate(kp.PublicKey(), &latestBlock).Times(1).Return(&commandspb.ProofOfWork{
-		Tid:   vgrand.RandomStr(5),
-		Nonce: 12345678,
-	}, nil)
+	// handler.node.EXPECT().LastBlock(ctx).Times(1).Return(latestBlock, nil)
+	handler.node.EXPECT().SpamStatistics(ctx, kp.PublicKey()).Times(1).Return(stats, nil)
+
 	handler.node.EXPECT().SendTransaction(ctx, gomock.Any(), apipb.SubmitTransactionRequest_TYPE_SYNC).Times(1).Return(txHash, nil)
 	handler.interactor.EXPECT().NotifySuccessfulTransaction(ctx, traceID, txHash, gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
 	handler.interactor.EXPECT().Log(ctx, traceID, gomock.Any(), gomock.Any()).AnyTimes()

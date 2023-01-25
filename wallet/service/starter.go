@@ -15,7 +15,6 @@ import (
 	coreversion "code.vegaprotocol.io/vega/version"
 	"code.vegaprotocol.io/vega/wallet/api"
 	nodeapi "code.vegaprotocol.io/vega/wallet/api/node"
-	"code.vegaprotocol.io/vega/wallet/api/pow"
 	"code.vegaprotocol.io/vega/wallet/network"
 	"code.vegaprotocol.io/vega/wallet/node"
 	servicev1 "code.vegaprotocol.io/vega/wallet/service/v1"
@@ -121,17 +120,15 @@ func (m *Starter) Start(jobRunner *vgjob.Runner, network string, noVersionCheck 
 	// when stopping the service.
 	closer := vgclose.NewCloser()
 
-	proofOfWork := pow.NewProofOfWork()
-
 	// API v1
-	apiV1, err := m.buildAPIV1(jobRunner.Ctx(), apiLogger, networkCfg, proofOfWork, closer)
+	apiV1, err := m.buildAPIV1(jobRunner.Ctx(), apiLogger, networkCfg, closer)
 	if err != nil {
 		logger.Error("Could not build the HTTP API v1", zap.Error(err))
 		return "", nil, err
 	}
 
 	// API v2
-	apiV2, err := m.buildAPIV2(jobRunner.Ctx(), apiLogger, networkCfg, proofOfWork, closer)
+	apiV2, err := m.buildAPIV2(jobRunner.Ctx(), apiLogger, networkCfg, closer)
 	if err != nil {
 		logger.Error("Could not build the HTTP API v2", zap.Error(err))
 		return "", nil, err
@@ -187,7 +184,7 @@ func (m *Starter) Start(jobRunner *vgjob.Runner, network string, noVersionCheck 
 
 // buildAPIV1
 // This API is deprecated.
-func (m *Starter) buildAPIV1(ctx context.Context, logger *zap.Logger, networkCfg *network.Network, proofOfWork *pow.ProofOfWork, closer *vgclose.Closer) (*servicev1.API, error) {
+func (m *Starter) buildAPIV1(ctx context.Context, logger *zap.Logger, networkCfg *network.Network, closer *vgclose.Closer) (*servicev1.API, error) {
 	apiV1Logger := logger.Named("v1")
 
 	forwarder, err := node.NewForwarder(apiV1Logger.Named("forwarder"), networkCfg.API.GRPC)
@@ -212,10 +209,10 @@ func (m *Starter) buildAPIV1(ctx context.Context, logger *zap.Logger, networkCfg
 
 	handler := wallets.NewHandler(m.walletStore)
 
-	return servicev1.NewAPI(apiV1Logger, handler, auth, forwarder, policy, networkCfg, proofOfWork), nil
+	return servicev1.NewAPI(apiV1Logger, handler, auth, forwarder, policy, networkCfg), nil
 }
 
-func (m *Starter) buildAPIV2(ctx context.Context, logger *zap.Logger, cfg *network.Network, pow api.ProofOfWork, closer *vgclose.Closer) (*servicev2.API, error) {
+func (m *Starter) buildAPIV2(ctx context.Context, logger *zap.Logger, cfg *network.Network, closer *vgclose.Closer) (*servicev2.API, error) {
 	apiV2logger := logger.Named("v2")
 	clientAPILogger := apiV2logger.Named("client-api")
 
@@ -230,7 +227,7 @@ func (m *Starter) buildAPIV2(ctx context.Context, logger *zap.Logger, cfg *netwo
 	// the provider of the builder function. We don't close what we don't own.
 	interactor := m.interactorBuilderFunc(ctx)
 
-	clientAPI, err := api.BuildClientAPI(m.walletStore, interactor, nodeSelector, pow)
+	clientAPI, err := api.BuildClientAPI(m.walletStore, interactor, nodeSelector)
 	if err != nil {
 		logger.Error("Could not instantiate the client part of the JSON-RPC API", zap.Error(err))
 		return nil, fmt.Errorf("could not instantiate the client part of the JSON-RPC API: %w", err)

@@ -40,6 +40,7 @@ type NodeForward interface {
 	CheckTx(context.Context, *commandspb.Transaction, int) (*api.CheckTransactionResponse, error)
 	HealthCheck(context.Context) error
 	LastBlockHeightAndHash(context.Context) (*api.LastBlockHeightResponse, int, error)
+	SpamStatistics(context.Context, string) (*api.GetSpamStatisticsResponse, int, error)
 	Stop()
 }
 

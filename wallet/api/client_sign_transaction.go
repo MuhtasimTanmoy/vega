@@ -13,6 +13,7 @@ import (
 	commandspb "code.vegaprotocol.io/vega/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/vega/protos/vega/wallet/v1"
 	"code.vegaprotocol.io/vega/wallet/api/node"
+	"code.vegaprotocol.io/vega/wallet/api/spam"
 	wcommands "code.vegaprotocol.io/vega/wallet/commands"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/mitchellh/mapstructure"
@@ -38,7 +39,6 @@ type ClientSignTransaction struct {
 	walletStore  WalletStore
 	interactor   Interactor
 	nodeSelector node.Selector
-	proofOfWork  ProofOfWork
 }
 
 func (h *ClientSignTransaction) Handle(ctx context.Context, rawParams jsonrpc.Params, connectedWallet ConnectedWallet) (jsonrpc.Result, *jsonrpc.ErrorDetails) {
@@ -103,27 +103,27 @@ func (h *ClientSignTransaction) Handle(ctx context.Context, rawParams jsonrpc.Pa
 	}
 
 	h.interactor.Log(ctx, traceID, InfoLog, "Retrieving latest block information...")
-	lastBlockData, err := currentNode.LastBlock(ctx)
+	stats, err := currentNode.SpamStatistics(ctx, request.PubKey)
 	if err != nil {
 		h.interactor.NotifyError(ctx, traceID, NetworkError, fmt.Errorf("could not get the latest block from the node: %w", err))
 		return nil, nodeCommunicationError(ErrCouldNotGetLastBlockInformation)
 	}
 	h.interactor.Log(ctx, traceID, SuccessLog, "Latest block information has been retrieved.")
 
-	if lastBlockData.ChainID == "" {
+	if stats.ChainID == "" {
 		h.interactor.NotifyError(ctx, traceID, NetworkError, ErrCouldNotGetChainIDFromNode)
 		return nil, nodeCommunicationError(ErrCouldNotGetChainIDFromNode)
 	}
 
 	// Sign the payload.
-	inputData, err := wcommands.ToMarshaledInputData(request, lastBlockData.BlockHeight)
+	inputData, err := wcommands.ToMarshaledInputData(request, stats.PoW.PowBlockStates[0].BlockHeight)
 	if err != nil {
 		h.interactor.NotifyError(ctx, traceID, InternalError, fmt.Errorf("could not marshal input data: %w", err))
 		return nil, internalError(ErrCouldNotSignTransaction)
 	}
 
 	h.interactor.Log(ctx, traceID, InfoLog, "Signing the transaction...")
-	signature, err := w.SignTx(params.PublicKey, commands.BundleInputDataForSigning(inputData, lastBlockData.ChainID))
+	signature, err := w.SignTx(params.PublicKey, commands.BundleInputDataForSigning(inputData, stats.ChainID))
 	if err != nil {
 		h.interactor.NotifyError(ctx, traceID, InternalError, fmt.Errorf("could not sign the transaction: %w", err))
 		return nil, internalError(ErrCouldNotSignTransaction)
@@ -139,7 +139,7 @@ func (h *ClientSignTransaction) Handle(ctx context.Context, rawParams jsonrpc.Pa
 
 	// Generate the proof of work for the transaction.
 	h.interactor.Log(ctx, traceID, InfoLog, "Computing proof-of-work...")
-	tx.Pow, err = h.proofOfWork.Generate(params.PublicKey, &lastBlockData)
+	tx.Pow, err = spam.GenerateProofOfWork(stats.PoW)
 	if err != nil {
 		h.interactor.NotifyError(ctx, traceID, InternalError, fmt.Errorf("could not compute the proof-of-work: %w", err))
 		return nil, internalError(ErrCouldNotSignTransaction)
@@ -182,11 +182,10 @@ func validateSignTransactionParams(rawParams jsonrpc.Params) (ClientParsedSignTr
 	}, nil
 }
 
-func NewClientSignTransaction(walletStore WalletStore, interactor Interactor, nodeSelector node.Selector, proofOfWork ProofOfWork) *ClientSignTransaction {
+func NewClientSignTransaction(walletStore WalletStore, interactor Interactor, nodeSelector node.Selector) *ClientSignTransaction {
 	return &ClientSignTransaction{
 		walletStore:  walletStore,
 		interactor:   interactor,
 		nodeSelector: nodeSelector,
-		proofOfWork:  proofOfWork,
 	}
 }

@@ -197,14 +197,14 @@ func (a *ClientAPI) SendTransaction(ctx context.Context, rawParams jsonrpc.Param
 	return a.sendTransaction.Handle(ctx, rawParams, connectedWallet)
 }
 
-func BuildClientAPI(walletStore WalletStore, interactor Interactor, nodeSelector node.Selector, pow ProofOfWork) (*ClientAPI, error) {
+func BuildClientAPI(walletStore WalletStore, interactor Interactor, nodeSelector node.Selector) (*ClientAPI, error) {
 	clientAPI := &ClientAPI{}
 
 	clientAPI.connectWallet = NewConnectWallet(walletStore, interactor)
 	clientAPI.getChainID = NewGetChainID(nodeSelector)
 	clientAPI.listKeys = NewListKeys(walletStore, interactor)
-	clientAPI.signTransaction = NewClientSignTransaction(walletStore, interactor, nodeSelector, pow)
-	clientAPI.sendTransaction = NewClientSendTransaction(walletStore, interactor, nodeSelector, pow)
+	clientAPI.signTransaction = NewClientSignTransaction(walletStore, interactor, nodeSelector)
+	clientAPI.sendTransaction = NewClientSendTransaction(walletStore, interactor, nodeSelector)
 
 	return clientAPI, nil
 }

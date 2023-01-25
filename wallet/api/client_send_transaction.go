@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"code.vegaprotocol.io/vega/commands"
@@ -14,6 +15,8 @@ import (
 	commandspb "code.vegaprotocol.io/vega/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/vega/protos/vega/wallet/v1"
 	"code.vegaprotocol.io/vega/wallet/api/node"
+	"code.vegaprotocol.io/vega/wallet/api/node/types"
+	"code.vegaprotocol.io/vega/wallet/api/spam"
 	wcommands "code.vegaprotocol.io/vega/wallet/commands"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
@@ -43,7 +46,40 @@ type ClientSendTransaction struct {
 	walletStore  WalletStore
 	interactor   Interactor
 	nodeSelector node.Selector
-	pow          ProofOfWork
+	mu           sync.Mutex
+}
+
+func checkSpam(st types.SpamStatistic) error {
+	if st.BannedUntil != nil {
+		// we are banned
+		return fmt.Errorf("cannot submit txn you are banned")
+	}
+
+	if st.CountForEpoch == st.MaxForEpoch {
+		return fmt.Errorf("submitting another txn will get you banned")
+	}
+
+	return nil
+}
+
+func checkSpamVotes(st types.VoteSpamStatistics, proposalID string) error {
+	if st.BannedUntil != nil {
+		// we are banned
+		return fmt.Errorf("cannot submit txn you are banned")
+	}
+
+	// find count by proposal
+	cnt, ok := st.Proposals[proposalID]
+	if !ok {
+		// no information on this proposal have not voted yet
+		return nil
+	}
+
+	if cnt == st.MaxForEpoch {
+		return fmt.Errorf("submitting another txn will get you banned")
+	}
+
+	return nil
 }
 
 func (h *ClientSendTransaction) Handle(ctx context.Context, rawParams jsonrpc.Params, connectedWallet ConnectedWallet) (jsonrpc.Result, *jsonrpc.ErrorDetails) {
@@ -109,21 +145,40 @@ func (h *ClientSendTransaction) Handle(ctx context.Context, rawParams jsonrpc.Pa
 		return nil, nodeCommunicationError(ErrNoHealthyNodeAvailable)
 	}
 
-	h.interactor.Log(ctx, traceID, InfoLog, "Retrieving latest block information...")
-	lastBlockData, err := currentNode.LastBlock(ctx)
+	// TODO lordy are we going to need a global lock around any txn sending?!
+	// we need to lock so that we do not send two transactions in at the same time using the same
+	// spam statistics
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	h.interactor.Log(ctx, traceID, InfoLog, "Retrieving spam statistics...")
+	spamStatistics, err := currentNode.SpamStatistics(ctx, request.PubKey)
 	if err != nil {
-		h.interactor.NotifyError(ctx, traceID, NetworkError, fmt.Errorf("could not get the latest block from node: %w", err))
+		h.interactor.NotifyError(ctx, traceID, NetworkError, fmt.Errorf("could not get spam statistics from node: %w", err))
 		return nil, nodeCommunicationError(ErrCouldNotGetLastBlockInformation)
 	}
-	h.interactor.Log(ctx, traceID, SuccessLog, "Latest block information has been retrieved.")
+	h.interactor.Log(ctx, traceID, SuccessLog, "Latest spam statistics been retrieved.")
 
-	if lastBlockData.ChainID == "" {
+	if len(spamStatistics.PoW.PowBlockStates) == 0 {
+		h.interactor.NotifyError(ctx, traceID, NetworkError, fmt.Errorf("could not get latest block height from node"))
+		return nil, nodeCommunicationError(ErrCouldNotGetLastBlockInformation)
+
+	}
+	latestBlockHeight := spamStatistics.PoW.PowBlockStates[0].BlockHeight
+	if spamStatistics.ChainID == "" {
+		h.interactor.NotifyError(ctx, traceID, NetworkError, ErrCouldNotGetChainIDFromNode)
+		return nil, nodeCommunicationError(ErrCouldNotGetChainIDFromNode)
+	}
+
+	// TODO choose what this error should look like
+	err = spam.CheckSubmission(request, spamStatistics)
+	if err != nil {
 		h.interactor.NotifyError(ctx, traceID, NetworkError, ErrCouldNotGetChainIDFromNode)
 		return nil, nodeCommunicationError(ErrCouldNotGetChainIDFromNode)
 	}
 
 	// Sign the payload.
-	rawInputData := wcommands.ToInputData(request, lastBlockData.BlockHeight)
+	rawInputData := wcommands.ToInputData(request, latestBlockHeight)
 	inputData, err := commands.MarshalInputData(rawInputData)
 	if err != nil {
 		h.interactor.NotifyError(ctx, traceID, InternalError, fmt.Errorf("could not marshal input data: %w", err))
@@ -131,7 +186,7 @@ func (h *ClientSendTransaction) Handle(ctx context.Context, rawParams jsonrpc.Pa
 	}
 
 	h.interactor.Log(ctx, traceID, InfoLog, "Signing the transaction...")
-	signature, err := w.SignTx(params.PublicKey, commands.BundleInputDataForSigning(inputData, lastBlockData.ChainID))
+	signature, err := w.SignTx(params.PublicKey, commands.BundleInputDataForSigning(inputData, spamStatistics.ChainID))
 	if err != nil {
 		h.interactor.NotifyError(ctx, traceID, InternalError, fmt.Errorf("could not sign the transaction: %w", err))
 		return nil, internalError(ErrCouldNotSendTransaction)
@@ -147,7 +202,7 @@ func (h *ClientSendTransaction) Handle(ctx context.Context, rawParams jsonrpc.Pa
 
 	// Generate the proof of work for the transaction.
 	h.interactor.Log(ctx, traceID, InfoLog, "Computing proof-of-work...")
-	tx.Pow, err = h.pow.Generate(params.PublicKey, &lastBlockData)
+	tx.Pow, err = spam.GenerateProofOfWork(spamStatistics.PoW)
 	if err != nil {
 		h.interactor.NotifyError(ctx, traceID, InternalError, fmt.Errorf("could not compute the proof-of-work: %w", err))
 		return nil, internalError(ErrCouldNotSendTransaction)
@@ -238,11 +293,10 @@ func validateSendTransactionParams(rawParams jsonrpc.Params) (ClientParsedSendTr
 	}, nil
 }
 
-func NewClientSendTransaction(walletStore WalletStore, interactor Interactor, nodeSelector node.Selector, pow ProofOfWork) *ClientSendTransaction {
+func NewClientSendTransaction(walletStore WalletStore, interactor Interactor, nodeSelector node.Selector) *ClientSendTransaction {
 	return &ClientSendTransaction{
 		walletStore:  walletStore,
 		interactor:   interactor,
 		nodeSelector: nodeSelector,
-		pow:          pow,
 	}
 }

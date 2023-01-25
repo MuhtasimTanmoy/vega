@@ -14,7 +14,6 @@ type API struct {
 	auth        Auth
 	nodeForward NodeForward
 	policy      Policy
-	pow         ProofOfWork
 }
 
 func NewAPI(
@@ -24,7 +23,6 @@ func NewAPI(
 	nodeForward NodeForward,
 	policy Policy,
 	net *network.Network,
-	pow ProofOfWork,
 ) *API {
 	return &API{
 		log:         log,
@@ -33,6 +31,5 @@ func NewAPI(
 		auth:        auth,
 		nodeForward: nodeForward,
 		policy:      policy,
-		pow:         pow,
 	}
 }
