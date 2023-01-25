@@ -12,14 +12,16 @@ import (
 
 var (
 	ErrPartyBanned       = errors.New("the pubkey is banned from submitting transaction due to network spam rules")
+	ErrPartyBannedPoW    = errors.New("the pubkey is banned from submitting transaction due to network spam rules PoW")
 	ErrPartyWillBeBanned = errors.New("submitting the transaction will cause the pubkey to be banned due to network spam rules")
 )
 
 // CheckSubmission return an error if we are banned from making this type of transaction or if submitting
 // the transaction will result in a banning.
 func CheckSubmission(req *walletpb.SubmitTransactionRequest, statistics nodetypes.SpamStatistics) error {
+	fmt.Println(statistics)
 	if statistics.PoW.BannedUntil != nil {
-		return ErrPartyBanned
+		return ErrPartyBannedPoW
 	}
 
 	var st nodetypes.SpamStatistic
