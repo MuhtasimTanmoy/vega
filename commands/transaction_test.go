@@ -1,6 +1,7 @@
 package commands_test
 
 import (
+	"encoding/hex"
 	"testing"
 
 	"code.vegaprotocol.io/vega/commands"
@@ -13,7 +14,7 @@ import (
 
 func TestCheckTransaction(t *testing.T) {
 	t.Run("Submitting valid transaction succeeds", testSubmittingInvalidSignature)
-	t.Run("Submitting valid transaction succeeds", testSubmittingValidTransactionSucceeds)
+	t.Run("Submitting valid transaction succeeds", TestSubmittingValidTransactionSucceeds)
 	t.Run("Submitting empty transaction fails", testSubmittingEmptyTransactionFails)
 	t.Run("Submitting nil transaction fails", testSubmittingNilTransactionFails)
 	t.Run("Submitting transaction without version fails", testSubmittingTransactionWithoutVersionFails)
@@ -40,7 +41,7 @@ func testSubmittingInvalidSignature(t *testing.T) {
 	require.Equal(t, commands.ErrInvalidSignature, err["tx.signature.value"][0])
 }
 
-func testSubmittingValidTransactionSucceeds(t *testing.T) {
+func TestSubmittingValidTransactionSucceeds(t *testing.T) {
 	tx := newValidTransactionV2(t)
 
 	err := checkTransaction(tx)
@@ -172,7 +173,7 @@ func testSubmittingTransactionWithInvalidEncodingOfPubKeyFails(t *testing.T) {
 }
 
 func checkTransaction(cmd *commandspb.Transaction) commands.Errors {
-	_, err := commands.CheckTransaction(cmd, "testnet")
+	_, err := commands.CheckTransaction(cmd, "vega-stagnet1-202302211715")
 
 	e, ok := err.(commands.Errors)
 	if !ok {
@@ -201,16 +202,22 @@ func newValidTransactionV2(t *testing.T) *commandspb.Transaction {
 		t.Fatal(err)
 	}
 
+	blah := "08cdf1b5c9071082f605a23f8e01080412406234356235646236326236666163326566666130623638646338326665633934613664376165393930633165303563323237653661333765333636363666626218042240666337666439353630373866623166633964623563313962383866303837346334323939623261373633396164303561343761323863306165663239316235352a0131aa0600"
+	rawInputData, err = hex.DecodeString(blah)
+	if err != nil {
+		panic(err)
+	}
+
 	return &commandspb.Transaction{
 		InputData: rawInputData,
 		Signature: &commandspb.Signature{
 			Algo:    "vega/ed25519",
-			Value:   "876e46defc40030391b5feb2c9bb0b6b68b2d95a6b5fd17a730a46ea73f3b1808420c8c609be6f1c6156e472ecbcd09202f750da000dee41429947a4b7eca00b",
+			Value:   "ae7a3b26a207e1908b17612a43bc5c8211aec54b921d226a33661b1a46d79ec681e003e00a0982bfe057f2b78c9c219bf36ec9b288b8d2b7ab3158680efef704",
 			Version: 1,
 		},
 		From: &commandspb.Transaction_PubKey{
-			PubKey: "b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0",
+			PubKey: "b45b5db62b6fac2effa0b68dc82fec94a6d7ae990c1e05c227e6a37e36666fbb",
 		},
-		Version: 2,
+		Version: 3,
 	}
 }
