@@ -14,6 +14,7 @@ package validators
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"sort"
 
@@ -35,10 +36,10 @@ func getStakeScore(delegationState []*types.ValidatorData) map[string]num.Decima
 	for _, ds := range delegationState {
 		totalStake.AddSum(num.Sum(ds.SelfStake, ds.StakeByDelegators))
 	}
-
 	totalStakeD := totalStake.ToDecimal()
 	scores := make(map[string]num.Decimal, len(delegationState))
 	for _, ds := range delegationState {
+		fmt.Println("normal", ds.NodeID, ds.SelfStake, ds.StakeByDelegators)
 		if totalStakeD.IsPositive() {
 			scores[ds.NodeID] = num.Sum(ds.SelfStake, ds.StakeByDelegators).ToDecimal().Div(totalStakeD)
 		} else {
@@ -348,6 +349,7 @@ func CalcAntiWhalingScore(delegationState []*types.ValidatorData, totalStakeD, o
 	for _, ds := range delegationState {
 		if totalStakeD.IsPositive() {
 			stakeScore[ds.NodeID] = CalcValidatorScore(num.Sum(ds.SelfStake, ds.StakeByDelegators).ToDecimal(), totalStakeD, optStake, stakeScoreParams)
+			fmt.Println("antiwhale", ds.NodeID, ds.SelfStake, ds.StakeByDelegators, stakeScore[ds.NodeID])
 		} else {
 			stakeScore[ds.NodeID] = num.DecimalZero()
 		}
