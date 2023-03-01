@@ -432,7 +432,12 @@ func (e *Engine) verify(tx abci.Tx) (byte, error) {
 }
 
 func (e *Engine) updateParam(netParamName, netParamValue string, p *params) {
-	e.log.Info("WWW pow updateing param", logging.Uint64("from", p.fromBlock), logging.Uint64("until", *p.untilBlock), logging.Uint64("old", p.spamPoWNumberOfTxPerBlock))
+	e.log.Info("WWW pow updateing param", logging.Uint64("from", p.fromBlock), logging.String("nil", ""), logging.Uint64("old", p.spamPoWNumberOfTxPerBlock))
+	if p.untilBlock != nil {
+		e.log.Info("WWW pow updateing param", logging.Uint64("from", p.fromBlock), logging.Uint64("until", *p.untilBlock), logging.Uint64("old", p.spamPoWNumberOfTxPerBlock))
+	} else {
+		e.log.Info("WWW pow updateing param", logging.Uint64("from", p.fromBlock), logging.String("until", "nil"), logging.Uint64("old", p.spamPoWNumberOfTxPerBlock))
+	}
 	switch netParamName {
 	case "spamPoWNumberOfPastBlocks":
 		spamPoWNumberOfPastBlock, _ := num.UintFromString(netParamValue, 10)
@@ -591,6 +596,9 @@ func getParamsForBlock(block uint64, activeParams []*params) *params {
 			break
 		}
 	}
+
+	// from 10 until 20
+	// from 21 until 30
 
 	params := activeParams[stateInd]
 	return params
