@@ -1,6 +1,8 @@
 package spam
 
 import (
+	"fmt"
+
 	vgcrypto "code.vegaprotocol.io/vega/libs/crypto"
 	commandspb "code.vegaprotocol.io/vega/protos/vega/commands/v1"
 	"code.vegaprotocol.io/vega/wallet/api"
@@ -105,6 +107,20 @@ func (s *Handler) GenerateProofOfWork(pubKey string, st *nodetypes.SpamStatistic
 
 	nPerBlock := blockState.TxPerBlock
 
+	// difficulty 4, n per block 2
+	// if nSent is 3
+	// diff += 3 / 2
+	// 4 + 1 = 5
+	// then nSent is 4
+	// diff += 4/2
+
+	// nSent is 1, first one we're fine
+	// nSent is 2, second one still less we're fine
+	// nSent is 3, we've exceeded the block so we plus 1
+	// nSent is 4, we've exceeded 1 bucket so we plus 1
+	// nSent is 5, we've exceeded 1 bucket plus a bit of another
+	//
+
 	// now work out the pow difficulty
 	difficulty := blockState.Difficulty
 	if uint64(nSent) > nPerBlock {
@@ -114,13 +130,14 @@ func (s *Handler) GenerateProofOfWork(pubKey string, st *nodetypes.SpamStatistic
 		// how many times have we hit the limit
 		difficulty += uint64(nSent) / nPerBlock
 	}
+	fmt.Println("sent", nSent, difficulty)
 
 	tid := vgcrypto.RandomHash()
 	powNonce, _, err := vgcrypto.PoW(blockState.BlockHash, tid, uint(difficulty), vgcrypto.Sha3)
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Println(tid, powNonce, "nsent", nSent, "perblock", nPerBlock, "diff", difficulty)
 	return &commandspb.ProofOfWork{
 		Tid:   tid,
 		Nonce: powNonce,
