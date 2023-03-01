@@ -13,7 +13,7 @@ import (
 func TestProofOfWorkGeneration(t *testing.T) {
 	t.Run("Basic generation", testBasicGeneration)
 	t.Run("Too many transactions without increasing difficulty", testTooManyTransactionsWithoutIncreasingDifficulty)
-	t.Run("Too many transactions with increasing difficulty", testTooManyTransactionsWithIncreasingDifficulty)
+	t.Run("Too many transactions with increasing difficulty", TestTooManyTransactionsWithIncreasingDifficulty)
 	t.Run("Number of allowed past blocks changes", testNumberOfPastBlocksChanges)
 	t.Run("Different chains", testDifferentChains)
 	t.Run("Statistics vs own count", testStatsVsOwnCount)
@@ -59,24 +59,19 @@ func testTooManyTransactionsWithoutIncreasingDifficulty(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func testTooManyTransactionsWithIncreasingDifficulty(t *testing.T) {
+func TestTooManyTransactionsWithIncreasingDifficulty(t *testing.T) {
 	p := spam.NewHandler()
 
 	pubkey1 := vgcrypto.RandomHash()
 
 	st := defaultSpamStats(t)
 	st.PoW.PowBlockStates[0].IncreasingDifficulty = true
-	st.PoW.PowBlockStates[0].TxPerBlock = 1
-
-	// when pubkey1 submits 5 transactions with difficulty 1
-	for i := 0; i < 5; i++ {
-		_, err := p.GenerateProofOfWork(pubkey1, st)
-		require.NoError(t, err)
-	}
+	st.PoW.PowBlockStates[0].TxPerBlock = 2
+	st.PoW.PowBlockStates[0].Difficulty = 4
 
 	// then the next 10 should increase in difficulty by one
 	bs := st.PoW.PowBlockStates[0]
-	for i := 2; i < 12; i++ {
+	for i := 1; i < 12; i++ {
 		r, err := p.GenerateProofOfWork(pubkey1, st)
 		require.NoError(t, err)
 
@@ -84,6 +79,7 @@ func testTooManyTransactionsWithIncreasingDifficulty(t *testing.T) {
 		require.True(t, ok)
 		require.GreaterOrEqual(t, uint(d), uint(i))
 	}
+	require.True(t, false)
 }
 
 func testNumberOfPastBlocksChanges(t *testing.T) {

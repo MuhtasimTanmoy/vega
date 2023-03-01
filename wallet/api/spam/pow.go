@@ -96,6 +96,10 @@ func (s *Handler) GenerateProofOfWork(pubKey string, st *nodetypes.SpamStatistic
 	counter := s.getCounterForChain(st.ChainID)
 	blockState := st.PoW.PowBlockStates[0]
 
+	for _, n := range st.PoW.PowBlockStates {
+		fmt.Println("h:", n.BlockHeight, "hash:", n.BlockHash, "per:", n.TxPerBlock, "seen:", n.TransactionsSeen)
+	}
+
 	// If the network parameter for past blocks has changed we need to tell the
 	// counter, so it can tell us if we're using a now historic block.
 	counter.resize(int64(st.PoW.PastBlocks))
@@ -130,7 +134,6 @@ func (s *Handler) GenerateProofOfWork(pubKey string, st *nodetypes.SpamStatistic
 		// how many times have we hit the limit
 		difficulty += uint64(nSent) / nPerBlock
 	}
-	fmt.Println("sent", nSent, difficulty)
 
 	tid := vgcrypto.RandomHash()
 	powNonce, _, err := vgcrypto.PoW(blockState.BlockHash, tid, uint(difficulty), vgcrypto.Sha3)

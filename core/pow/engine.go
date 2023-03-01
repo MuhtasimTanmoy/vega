@@ -432,6 +432,7 @@ func (e *Engine) verify(tx abci.Tx) (byte, error) {
 }
 
 func (e *Engine) updateParam(netParamName, netParamValue string, p *params) {
+	e.log.Info("WWW pow updateing param", logging.Uint64("from", p.fromBlock), logging.Uint64("until", *p.untilBlock), logging.Uint64("old", p.spamPoWNumberOfTxPerBlock))
 	switch netParamName {
 	case "spamPoWNumberOfPastBlocks":
 		spamPoWNumberOfPastBlock, _ := num.UintFromString(netParamValue, 10)
@@ -451,7 +452,10 @@ func (e *Engine) updateParam(netParamName, netParamValue string, p *params) {
 
 func (e *Engine) updateWithLock(netParamName, netParamValue string) {
 	// if there are no settings yet
+
+	e.log.Info("WWW pow update", logging.String("name", netParamName), logging.String("value", netParamValue), logging.Uint64("current block", e.currentBlock))
 	if len(e.activeParams) == 0 {
+		e.log.Info("WWW no active")
 		p := &params{
 			fromBlock:  e.currentBlock,
 			untilBlock: nil,
@@ -469,6 +473,7 @@ func (e *Engine) updateWithLock(netParamName, netParamValue string) {
 		e.updateParam(netParamName, netParamValue, lastActive)
 		return
 	}
+	e.log.Info("WWW new active")
 	lastActive.untilBlock = new(uint64)
 	*lastActive.untilBlock = e.currentBlock
 	newParams := &params{
