@@ -278,7 +278,7 @@ func (w *Witness) validateCheckUntil(checkUntil time.Time) error {
 func newBackoff(ctx context.Context, maxElapsedTime time.Duration) backoff.BackOff {
 	bo := backoff.NewExponentialBackOff()
 	bo.MaxElapsedTime = maxElapsedTime
-	bo.InitialInterval = 1 * time.Second
+	bo.InitialInterval = 1 * time.Millisecond
 	return backoff.WithContext(bo, ctx)
 }
 
