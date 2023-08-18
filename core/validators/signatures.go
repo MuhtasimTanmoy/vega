@@ -142,9 +142,10 @@ func (s *ERC20Signatures) getSignatureWithSubmitterByResID(resID string) (*signa
 
 func (s *ERC20Signatures) offerValidatorAddedSignatures(resID string) []byte {
 	if !s.isValidatorSetup {
+		fmt.Println("NOT VALIDATOR SETUP")
 		return nil
 	}
-
+	fmt.Println("looking....")
 	sig, err := s.getSignatureWithSubmitterByResID(resID)
 	if err != nil {
 		s.log.Panic("unable to find signature", logging.Error(err))
@@ -165,8 +166,10 @@ func (s *ERC20Signatures) offerValidatorAddedSignatures(resID string) []byte {
 
 func (s *ERC20Signatures) offerValidatorRemovedSignatures(resID string) []byte {
 	if !s.isValidatorSetup {
+		fmt.Println("NOT VALIDATOR SETUP")
 		return nil
 	}
+	fmt.Println("looking....")
 
 	sig, err := s.getSignatureWithSubmitterByResID(resID)
 	if err != nil {
@@ -415,7 +418,7 @@ func (s *ERC20Signatures) ClearStaleSignatures() {
 	}
 
 	for _, e := range toRemove {
-		s.log.Debug("removing stale pending signature", logging.String("eth-address", e))
+		s.log.Info("removing stale pending signature", logging.String("eth-address", e))
 		delete(s.pendingSignatures, e)
 	}
 }

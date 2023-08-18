@@ -461,6 +461,7 @@ func (t *Topology) BeginBlock(ctx context.Context, req abcitypes.RequestBeginBlo
 
 	t.signatures.SetNonce(currentTime)
 	t.signatures.ClearStaleSignatures()
+	fmt.Println("offering signatures...")
 	t.signatures.OfferSignatures()
 	t.keyRotationBeginBlockLocked(ctx)
 	t.ethereumKeyRotationBeginBlockLocked(ctx)

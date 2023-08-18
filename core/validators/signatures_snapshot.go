@@ -13,6 +13,7 @@
 package validators
 
 import (
+	"fmt"
 	"sort"
 
 	"code.vegaprotocol.io/vega/libs/num"
@@ -48,7 +49,7 @@ func (s *ERC20Signatures) SerialisePendingSignatures() *snapshot.ToplogySignatur
 	sort.SliceStable(issued, func(i, j int) bool {
 		return issued[i].ResourceId < issued[j].ResourceId
 	})
-
+	fmt.Println("PENDINGSIGS", len(pending), len(issued))
 	return &snapshot.ToplogySignatures{
 		PendingSignatures: pending,
 		IssuedSignatures:  issued,

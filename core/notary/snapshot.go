@@ -15,6 +15,7 @@ package notary
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"sort"
 	"strings"
 
@@ -159,7 +160,7 @@ func (n *SnapshotNotary) serialiseNotary() ([]byte, error) {
 			sigs = append(sigs, &types.NotarySigs{ID: ik.id, Kind: int32(ik.kind)})
 		}
 	}
-
+	fmt.Println("NSIGSS", len(sigs))
 	sort.SliceStable(sigs, func(i, j int) bool {
 		// sigs could be "" so we need to sort on ID as well
 		switch strings.Compare(sigs[i].ID, sigs[j].ID) {
@@ -192,10 +193,10 @@ func (n *SnapshotNotary) restoreNotary(notary *types.Notary, p *types.Payload) e
 		selfSigned  = map[idKind]bool{}
 		self        = n.top.SelfVegaPubKey()
 	)
-
+	fmt.Println("RESTORE NSIGSS", len(sigs))
 	for _, s := range notary.Sigs {
 		idK := idKind{id: s.ID, kind: v1.NodeSignatureKind(s.Kind)}
-
+		fmt.Println("restoring", s.ID, s.Kind)
 		sig, err := hex.DecodeString(s.Sig)
 		if err != nil {
 			n.log.Panic("invalid signature from snapshot", logging.Error(err))
@@ -205,7 +206,10 @@ func (n *SnapshotNotary) restoreNotary(notary *types.Notary, p *types.Payload) e
 		if isValidator {
 			signed := selfSigned[idK]
 			if !signed {
-				selfSigned[idK] = strings.EqualFold(s.Node, self)
+				thing := strings.EqualFold(s.Node, self)
+				selfSigned[idK] = thing
+				fmt.Println("signed", thing)
+
 			}
 		}
 
@@ -225,6 +229,7 @@ func (n *SnapshotNotary) restoreNotary(notary *types.Notary, p *types.Payload) e
 	for resource, ok := range selfSigned {
 		if !ok {
 			// this is not signed, just add it to the retries list
+			fmt.Println("ADDING TO RETRY", resource.id)
 			retries.Add(resource, nil)
 		}
 	}
