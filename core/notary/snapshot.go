@@ -203,7 +203,7 @@ func (n *SnapshotNotary) restoreNotary(notary *types.Notary, p *types.Payload) e
 		}
 		ns := nodeSig{node: s.Node, sig: string(sig)}
 
-		if isValidator {
+		if isValidator && s.Pending {
 			signed := selfSigned[idK]
 			if !signed {
 				thing := strings.EqualFold(s.Node, self)
