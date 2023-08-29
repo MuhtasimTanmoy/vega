@@ -15,6 +15,8 @@ package abci
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
+	"time"
 
 	"code.vegaprotocol.io/vega/core/blockchain"
 	vgcontext "code.vegaprotocol.io/vega/libs/context"
@@ -102,6 +104,8 @@ func (app *App) CheckTx(req types.RequestCheckTx) (resp types.ResponseCheckTx) {
 }
 
 func (app *App) DeliverTx(req types.RequestDeliverTx) (resp types.ResponseDeliverTx) {
+	fmt.Println("entering deliver tx", time.Now())
+	defer func() { fmt.Println("leaving deliver txn", time.Now()) }()
 	// first, only decode the transaction but don't validate
 	tx, code, err := app.getTx(req.GetTx())
 	if err != nil {

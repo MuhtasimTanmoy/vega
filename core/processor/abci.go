@@ -729,8 +729,8 @@ func (app *App) OnInitChain(req tmtypes.RequestInitChain) tmtypes.ResponseInitCh
 }
 
 func (app *App) OnEndBlock(req tmtypes.RequestEndBlock) (ctx context.Context, resp tmtypes.ResponseEndBlock) {
-	app.log.Debug("entering end block", logging.Time("at", time.Now()))
-	defer func() { app.log.Debug("leaving end block", logging.Time("at", time.Now())) }()
+	app.log.Info("entering end block", logging.Time("at", time.Now()))
+	defer func() { app.log.Info("leaving end block", logging.Time("at", time.Now())) }()
 
 	app.log.Debug("ABCI service END block completed",
 		logging.Int64("current-timestamp", app.currentTimestamp.UnixNano()),
@@ -775,8 +775,8 @@ func (app *App) OnEndBlock(req tmtypes.RequestEndBlock) (ctx context.Context, re
 func (app *App) OnBeginBlock(
 	req tmtypes.RequestBeginBlock,
 ) (ctx context.Context, resp tmtypes.ResponseBeginBlock) {
-	app.log.Debug("entering begin block", logging.Time("at", time.Now()), logging.Uint64("height", uint64(req.Header.Height)))
-	defer func() { app.log.Debug("leaving begin block", logging.Time("at", time.Now())) }()
+	app.log.Info("entering begin block", logging.Time("at", time.Now()), logging.Uint64("height", uint64(req.Header.Height)))
+	defer func() { app.log.Info("leaving begin block", logging.Time("at", time.Now())) }()
 
 	hash := hex.EncodeToString(req.Hash)
 	ctx = vgcontext.WithBlockHeight(vgcontext.WithTraceID(app.chainCtx, hash), req.Header.Height)
@@ -879,8 +879,8 @@ func (app *App) startProtocolUpgrade(ctx context.Context) {
 }
 
 func (app *App) OnCommit() (resp tmtypes.ResponseCommit) {
-	app.log.Debug("entering commit", logging.Time("at", time.Now()))
-	defer func() { app.log.Debug("leaving commit", logging.Time("at", time.Now())) }()
+	app.log.Info("entering commit", logging.Time("at", time.Now()))
+	defer func() { app.log.Info("leaving commit", logging.Time("at", time.Now())) }()
 
 	if !app.nilPow {
 		app.pow.Commit()
