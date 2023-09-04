@@ -211,6 +211,11 @@ func (e *Engine) Poll(ctx context.Context, wallTime time.Time) {
 	// Instead call methods on the engine that take the mutex for a small time where needed.
 	// We do need to make use direct use of of e.log, e.client and e.forwarder; but these are static after creation
 	// and the methods used are safe for concurrent access.
+
+	if calls := e.getCalls(); len(calls) == 0 {
+		return
+	}
+
 	lastEthBlock, err := e.client.BlockByNumber(ctx, nil)
 	if err != nil {
 		e.log.Errorf("failed to get current block header: %w", err)
