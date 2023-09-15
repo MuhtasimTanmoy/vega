@@ -381,6 +381,6 @@ replace (
 	github.com/fergusstrange/embedded-postgres => github.com/vegaprotocol/embedded-postgres v1.13.1-0.20221123183204-2e7a2feee5bb
 	github.com/muesli/cancelreader => github.com/vegaprotocol/cancelreader v0.0.0-20230724130739-6f2217a69449
 	github.com/shopspring/decimal => github.com/vegaprotocol/decimal v1.3.1-uint256
-	github.com/tendermint/tendermint => github.com/vegaprotocol/cometbft v0.34.28-0.20230322133204-3d8588de736e
+	github.com/tendermint/tendermint => github.com/vegaprotocol/cometbft v0.34.28-0.20230915095517-f5f7d9627aee
 	github.com/tendermint/tm-db => github.com/cometbft/cometbft-db v0.6.7
 )
