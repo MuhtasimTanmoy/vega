@@ -166,11 +166,6 @@ func (s *Verifier) ProcessEthereumContractCallResult(callEvent ethcall.ContractC
 		return errors.ErrDuplicatedEthereumCallEvent
 	}
 
-	s.lastBlock = &types.EthBlock{
-		Height: callEvent.BlockHeight,
-		Time:   callEvent.BlockTime,
-	}
-
 	pending := &pendingCallEvent{
 		callEvent: callEvent,
 		check:     func(ctx context.Context) error { return s.checkCallEventResult(ctx, callEvent) },
@@ -257,6 +252,14 @@ func (s *Verifier) onCallEventVerified(event interface{}, ok bool) {
 
 func (s *Verifier) OnTick(ctx context.Context, t time.Time) {
 	for _, callResult := range s.finalizedCallResults {
+
+		if s.lastBlock == nil || s.lastBlock.Height < callResult.BlockHeight {
+			s.lastBlock = &types.EthBlock{
+				Height: callResult.BlockHeight,
+				Time:   callResult.BlockTime,
+			}
+		}
+
 		if callResult.Error == nil {
 			result, err := s.ethEngine.MakeResult(callResult.SpecId, callResult.Result)
 			if err != nil {

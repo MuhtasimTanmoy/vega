@@ -78,11 +78,10 @@ func TestEthereumOracleVerifierWithPendingQueryResults(t *testing.T) {
 
 	result := okResult()
 
-	eov.ethCallEngine.EXPECT().CallSpec(gomock.Any(), "testspec", uint64(5)).Return(result, nil)
-	eov.ethCallEngine.EXPECT().GetRequiredConfirmations("testspec").Return(uint64(5), nil)
-
+	eov.ethCallEngine.EXPECT().CallSpec(gomock.Any(), "testspec", uint64(5)).Return(result, nil).Times(1)
+	eov.ethCallEngine.EXPECT().GetRequiredConfirmations("testspec").Return(uint64(5), nil).Times(1)
 	eov.ts.EXPECT().GetTimeNow().Times(1)
-	eov.ethConfirmations.EXPECT().CheckRequiredConfirmations(uint64(5), uint64(5)).Return(nil)
+	eov.ethConfirmations.EXPECT().CheckRequiredConfirmations(uint64(5), uint64(5)).Return(nil).Times(1)
 
 	var checkResult error
 	eov.witness.EXPECT().StartCheck(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -90,7 +89,7 @@ func TestEthereumOracleVerifierWithPendingQueryResults(t *testing.T) {
 		DoAndReturn(func(toCheck validators.Resource, fn func(interface{}, bool), _ time.Time) error {
 			checkResult = toCheck.Check(context.Background())
 			return nil
-		})
+		}).Times(1)
 
 	s1, _, err := eov.GetState(contractCallKey)
 	require.Nil(t, err)
@@ -102,7 +101,7 @@ func TestEthereumOracleVerifierWithPendingQueryResults(t *testing.T) {
 
 	callEvent := ethcall.ContractCallEvent{
 		BlockHeight: 5,
-		BlockTime:   100,
+		BlockTime:   150,
 		SpecId:      "testspec",
 		Result:      []byte("testbytes"),
 	}
@@ -110,6 +109,33 @@ func TestEthereumOracleVerifierWithPendingQueryResults(t *testing.T) {
 	err = eov.ProcessEthereumContractCallResult(callEvent)
 	assert.NoError(t, err)
 	assert.NoError(t, checkResult)
+
+	// now add another event which we will be finalised
+	var onQueryResultVerified func(interface{}, bool)
+	var resourceToCheck interface{}
+	eov.witness.EXPECT().StartCheck(gomock.Any(), gomock.Any(), gomock.Any()).
+		Times(1).
+		DoAndReturn(func(toCheck validators.Resource, fn func(interface{}, bool), _ time.Time) error {
+			resourceToCheck = toCheck
+			onQueryResultVerified = fn
+			checkResult = toCheck.Check(context.Background())
+			return nil
+		}).Times(1)
+	eov.ethCallEngine.EXPECT().CallSpec(gomock.Any(), "testspec", uint64(1)).Return(result, nil).Times(1)
+	eov.ethCallEngine.EXPECT().GetRequiredConfirmations("testspec").Return(uint64(5), nil).Times(1)
+	eov.ts.EXPECT().GetTimeNow().Times(1)
+	eov.ethConfirmations.EXPECT().CheckRequiredConfirmations(uint64(1), uint64(5)).Return(nil).Times(1)
+	eov.ethCallEngine.EXPECT().MakeResult("testspec", []byte("testbytes")).Return(result, nil)
+	err = eov.ProcessEthereumContractCallResult(generateDummyCallEvent())
+	assert.NoError(t, err)
+	assert.NoError(t, checkResult)
+
+	// result verified
+	onQueryResultVerified(resourceToCheck, true)
+
+	eov.oracleBroadcaster.EXPECT().BroadcastData(gomock.Any(), gomock.Any()).Times(1)
+
+	eov.onTick(context.Background(), time.Unix(10, 0))
 
 	s2, _, err := eov.GetState(contractCallKey)
 	require.Nil(t, err)
@@ -144,7 +170,7 @@ func TestEthereumOracleVerifierWithPendingQueryResults(t *testing.T) {
 	require.Nil(t, err)
 
 	// After the state of the verifier is loaded it should start the call engine at the restored height
-	restoredVerifier.ethCallEngine.EXPECT().StartAtHeight(uint64(5), uint64(100))
+	restoredVerifier.ethCallEngine.EXPECT().StartAtHeight(uint64(1), uint64(100))
 	restoredVerifier.OnStateLoaded(context.Background())
 
 	// Check its there by adding it again and checking for duplication error

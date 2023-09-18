@@ -69,7 +69,7 @@ func TestMultisigTopologyCheckpoint(t *testing.T) {
 	assert.Len(t, top.GetSigners(), 0)
 
 	signerEvent1 := types.SignerEvent{
-		BlockNumber: 150,
+		BlockNumber: 101,
 		LogIndex:    11,
 		TxHash:      "0xacbde",
 		ID:          "someid",
@@ -113,7 +113,6 @@ func TestMultisigTopologyCheckpoint(t *testing.T) {
 	})
 
 	// now we will add some pending ones
-
 	thresholdEvent2 := types.SignerThresholdSetEvent{
 		Threshold:   500,
 		BlockNumber: 150,
@@ -131,7 +130,7 @@ func TestMultisigTopologyCheckpoint(t *testing.T) {
 	assert.NoError(t, top.ProcessThresholdEvent(&thresholdEvent2))
 
 	signerEvent2 := types.SignerEvent{
-		BlockNumber: 101,
+		BlockNumber: 150,
 		LogIndex:    19,
 		TxHash:      "0xacbde3",
 		ID:          "someid3",
@@ -162,8 +161,8 @@ func TestMultisigTopologyCheckpoint(t *testing.T) {
 	top2.broker.EXPECT().Send(gomock.Any()).Times(2)
 	top2.ethEventSource.EXPECT().UpdateMultisigControlStartingBlock(gomock.Any()).Do(
 		func(block uint64) {
-			// ensure we restart at the right block
-			assert.Equal(t, int(block), 101)
+			// ensure we restart at the right block, which will be the block height of the last verified event
+			assert.Equal(t, 101, int(block))
 		},
 	)
 

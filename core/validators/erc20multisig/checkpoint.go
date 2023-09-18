@@ -97,36 +97,12 @@ func (t *Topology) getSigners() []*events.ERC20MultiSigSignerEvent {
 func (t *Topology) getLastBlockSeen() uint64 {
 	var block uint64
 
-	for _, v := range t.pendingSigners {
-		if block == 0 {
-			block = v.BlockNumber
-			continue
-		}
+	// pick the most recent verified
 
-		if block > v.BlockNumber {
-			block = v.BlockNumber
-		}
-	}
-
-	for _, v := range t.pendingThresholds {
-		if block == 0 {
-			block = v.BlockNumber
-			continue
-		}
-
-		if block > v.BlockNumber {
-			block = v.BlockNumber
-		}
-	}
-
-	// now if we have got any pending one, let's just pick the
-	// most recent verified
-	if block == 0 {
-		for _, evts := range t.eventsPerAddress {
-			for _, evt := range evts {
-				if evt.BlockNumber > block {
-					block = evt.BlockNumber
-				}
+	for _, evts := range t.eventsPerAddress {
+		for _, evt := range evts {
+			if evt.BlockNumber > block {
+				block = evt.BlockNumber
 			}
 		}
 	}

@@ -160,9 +160,6 @@ func (e *Engine) ERC20WithdrawalEvent(
 		return ErrWithdrawalNotReady
 	}
 
-	if blockNumber > e.lastSeenEthBlock {
-		e.lastSeenEthBlock = blockNumber
-	}
 	withd.WithdrawalDate = e.timeService.GetTimeNow().UnixNano()
 	withd.TxHash = txHash
 	e.broker.Send(events.NewWithdrawalEvent(ctx, *withd))
@@ -319,7 +316,4 @@ func (e *Engine) offerERC20NotarySignatures(resource string) []byte {
 
 func (e *Engine) addAction(aa *assetAction) {
 	e.assetActs[aa.id] = aa
-	if aa.blockHeight > e.lastSeenEthBlock {
-		e.lastSeenEthBlock = aa.blockHeight
-	}
 }

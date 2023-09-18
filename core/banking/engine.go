@@ -386,6 +386,10 @@ func (e *Engine) getWithdrawalFromRef(ref *big.Int) (*types.Withdrawal, error) {
 }
 
 func (e *Engine) finalizeAction(ctx context.Context, aa *assetAction) error {
+	if !aa.IsBuiltinAssetDeposit() && aa.blockHeight > e.lastSeenEthBlock {
+		e.lastSeenEthBlock = aa.blockHeight
+	}
+
 	switch {
 	case aa.IsBuiltinAssetDeposit():
 		dep := e.deposits[aa.id]

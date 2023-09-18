@@ -164,10 +164,7 @@ func (s *StakeVerifier) restorePendingSD(ctx context.Context, deposited []*types
 
 func (s *StakeVerifier) OnStateLoaded(ctx context.Context) error {
 	// tell the internal EEF where it got up to so we do not resend events we're already seen
-	lastBlockSeen := s.getLastBlockSeen()
-	if lastBlockSeen == 0 {
-		lastBlockSeen = s.accs.getLastBlockSeen()
-	}
+	lastBlockSeen := s.accs.getLastBlockSeen()
 	if lastBlockSeen != 0 {
 		s.log.Info("restoring staking bridge starting block", logging.Uint64("block", lastBlockSeen))
 		s.ethEventSource.UpdateStakingStartingBlock(lastBlockSeen)
