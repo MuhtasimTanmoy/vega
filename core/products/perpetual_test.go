@@ -56,6 +56,7 @@ func TestPeriodicSettlement(t *testing.T) {
 	t.Run("margin increase, negative payment", TestGetMarginIncreaseNegativePayment)
 	t.Run("test pathological case with out of order points", testOutOfOrderPointsBeforePeriodStart)
 	t.Run("test update perpetual", testUpdatePerpetual)
+	t.Run("test with real life data", TestWithRealLifeData)
 }
 
 func TestExternalDataPointTWAPInSequence(t *testing.T) {
@@ -772,7 +773,7 @@ func testUpdatePerpetual(t *testing.T) {
 	assert.NoError(t, perp.perpetual.SubmitDataPoint(ctx, num.NewUint(123), lastPoint.t+int64(time.Hour)))
 }
 
-func TestRealLifeData(t *testing.T) {
+func TestWithRealLifeData(t *testing.T) {
 	// margin factor is 0.5
 	perp := testPerpetualWithOpts(t, "0", "0", "0", "0.5")
 	defer perp.ctrl.Finish()
@@ -781,14 +782,14 @@ func TestRealLifeData(t *testing.T) {
 	perp.broker.EXPECT().Send(gomock.Any()).Times(1)
 	perp.perpetual.OnLeaveOpeningAuction(ctx, 1695710684000000000)
 
-	// now submit a data point and check it is expected i.e the funding period is still active
-	// perp.broker.EXPECT().Send(gomock.Any()).AnyTimes()
-	// perp.broker.EXPECT().SendBatch(gomock.Any()).AnyTimes()
-
 	// regardless of the order the points are submitted we should get the same TWAP, so we randomly shuffle the order
+	seed := time.Now().Unix()
+	rng := rand.New(rand.NewSource(seed))
+	t.Log("seed", seed) // print seed so a failure can be reproduced
+
 	points := fairgroundTestData[:]
 	for i := range points {
-		j := rand.Intn(i + 1)
+		j := rng.Intn(i + 1)
 		points[i], points[j] = points[j], points[i]
 	}
 
