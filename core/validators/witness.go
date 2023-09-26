@@ -292,7 +292,7 @@ func (w *Witness) start(ctx context.Context, r *res) {
 		)
 		err := r.res.Check(ctx)
 		if err != nil {
-			w.log.Debug("error checking resource", logging.Error(err))
+			w.log.Error("error checking resource", logging.Error(err))
 			// dump error
 			return err
 		}
