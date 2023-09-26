@@ -55,7 +55,7 @@ func TestPeriodicSettlement(t *testing.T) {
 	t.Run("margin increase", testGetMarginIncrease)
 	t.Run("margin increase, negative payment", TestGetMarginIncreaseNegativePayment)
 	t.Run("test pathological case with out of order points", testOutOfOrderPointsBeforePeriodStart)
-	t.Run("test update perpetual", TestUpdatePerpetual)
+	t.Run("test update perpetual", testUpdatePerpetual)
 }
 
 func TestExternalDataPointTWAPInSequence(t *testing.T) {
@@ -737,7 +737,42 @@ func TestGetMarginIncreaseNegativePayment(t *testing.T) {
 	assert.Equal(t, "-5", inc.String())
 }
 
-func TestUpdatePerpetual(t *testing.T) {
+func testUpdatePerpetual(t *testing.T) {
+	// margin factor is 0.5
+	perp := testPerpetualWithOpts(t, "0", "0", "0", "0.5")
+	defer perp.ctrl.Finish()
+	ctx := context.Background()
+
+	// test data
+	points := getTestDataPoints(t)
+	perp.broker.EXPECT().Send(gomock.Any()).Times(1)
+	perp.perpetual.OnLeaveOpeningAuction(ctx, 1000)
+	submitDataWithDifference(t, perp, points, 10)
+
+	// query margin factor before update
+	lastPoint := points[len(points)-1]
+	inc := perp.perpetual.GetMarginIncrease(lastPoint.t)
+	assert.Equal(t, "5", inc.String())
+
+	// do the perps update with a new margin factor
+	update := getTestPerpProd(t)
+	update.MarginFundingFactor = num.DecimalFromFloat(1)
+	err := perp.perpetual.Update(ctx, &types.InstrumentPerps{Perps: update}, perp.oe)
+	require.NoError(t, err)
+
+	// expect two unsubscriptions
+	assert.Equal(t, perp.unsub, 2)
+
+	// margin increase should now be double, which means the data-points were preserved
+	inc = perp.perpetual.GetMarginIncrease(lastPoint.t)
+	assert.Equal(t, "10", inc.String())
+
+	// now submit a data point and check it is expected i.e the funding period is still active
+	perp.broker.EXPECT().Send(gomock.Any()).Times(1)
+	assert.NoError(t, perp.perpetual.SubmitDataPoint(ctx, num.NewUint(123), lastPoint.t+int64(time.Hour)))
+}
+
+func TestRealLifeData(t *testing.T) {
 	// margin factor is 0.5
 	perp := testPerpetualWithOpts(t, "0", "0", "0", "0.5")
 	defer perp.ctrl.Finish()
@@ -747,23 +782,22 @@ func TestUpdatePerpetual(t *testing.T) {
 	perp.perpetual.OnLeaveOpeningAuction(ctx, 1695710684000000000)
 
 	// now submit a data point and check it is expected i.e the funding period is still active
-	perp.broker.EXPECT().Send(gomock.Any()).AnyTimes()
-	perp.broker.EXPECT().SendBatch(gomock.Any()).AnyTimes()
+	// perp.broker.EXPECT().Send(gomock.Any()).AnyTimes()
+	// perp.broker.EXPECT().SendBatch(gomock.Any()).AnyTimes()
 
+	// regardless of the order the points are submitted we should get the same TWAP, so we randomly shuffle the order
 	points := fairgroundTestData[:]
 	for i := range points {
 		j := rand.Intn(i + 1)
 		points[i], points[j] = points[j], points[i]
 	}
 
-	for _, pp := range points {
-		assert.NoError(t, perp.perpetual.SubmitDataPoint(ctx, pp.price, pp.t))
-		perp.perpetual.AddTestExternalPoint(ctx, pp.price, pp.t)
-	}
-
+	// we need external/internal data so we submit the same set with a difference
+	submitDataWithDifference(t, perp, points, 1000)
 	productData := perp.perpetual.GetData(1695712484000000000)
 	perpData := productData.Data.(*types.PerpetualData)
-	assert.Equal(t, "26274799006", perpData.InternalTWAP)
+	assert.Equal(t, "26274800006", perpData.InternalTWAP)
+	assert.Equal(t, "26274799006", perpData.ExternalTWAP)
 }
 
 // submits the given data points as both external and interval but with the given different added to the internal price.

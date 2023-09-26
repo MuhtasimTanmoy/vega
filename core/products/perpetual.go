@@ -585,9 +585,6 @@ func (p *Perpetual) handleSettlementCue(ctx context.Context, t int64) {
 		return
 	}
 
-	tt := p.internalTWAP.calculate(t)
-	p.log.Info("twap", logging.String("", tt.String()))
-
 	if !p.haveData(t) {
 		// we have no points so we just start a new interval
 		p.broker.Send(events.NewFundingPeriodEvent(ctx, p.id, p.seq, p.startedAt, ptr.From(t), nil, nil, nil, nil))
@@ -599,10 +596,8 @@ func (p *Perpetual) handleSettlementCue(ctx context.Context, t int64) {
 	r := p.calculateFundingPayment(t)
 
 	// send it away!
-	if r.fundingPayment != nil && !r.fundingPayment.IsZero() {
-		fp := &num.Numeric{}
-		p.settlementDataListener(ctx, fp.SetInt(r.fundingPayment))
-	}
+	fp := &num.Numeric{}
+	p.settlementDataListener(ctx, fp.SetInt(r.fundingPayment))
 
 	// now restart the interval
 	p.broker.Send(events.NewFundingPeriodEvent(ctx, p.id, p.seq, p.startedAt, ptr.From(t),
