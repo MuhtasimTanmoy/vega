@@ -199,11 +199,29 @@ func (c *cachedTWAP) insertPoint(point *dataPoint) (*num.Uint, error) {
 // addPoint takes the given point and works out where it fits against what we already have, updates the
 // running sum-product and returns the TWAP at point.t.
 func (c *cachedTWAP) addPoint(point *dataPoint) (*num.Uint, error) {
-	if len(c.points) == 0 || point.t < c.start {
+	if len(c.points) == 0 {
 		// first point, or new point is before the start of the funding period
 		c.points = []*dataPoint{point}
 		c.setPeriod(point.t, point.t)
 		c.sumProduct = num.UintZero()
+		return num.UintZero(), nil
+	}
+
+	// first point ever
+	// point is before start, we need to keep all points after it
+	//
+	if point.t < c.periodStart {
+		points := c.points[:]
+		c.points = []*dataPoint{point}
+		c.setPeriod(point.t, point.t)
+		c.sumProduct = num.UintZero()
+		for _, p := range points {
+			if p.t <= point.t {
+				continue
+			}
+			c.calculate(p.t)
+			c.points = append(c.points, p)
+		}
 		return num.UintZero(), nil
 	}
 
@@ -566,6 +584,9 @@ func (p *Perpetual) handleSettlementCue(ctx context.Context, t int64) {
 		}
 		return
 	}
+
+	tt := p.internalTWAP.calculate(t)
+	p.log.Info("twap", logging.String("", tt.String()))
 
 	if !p.haveData(t) {
 		// we have no points so we just start a new interval
