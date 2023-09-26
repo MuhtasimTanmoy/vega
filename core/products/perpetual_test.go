@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"math/rand"
 	"sort"
 	"testing"
 	"time"
@@ -54,7 +55,7 @@ func TestPeriodicSettlement(t *testing.T) {
 	t.Run("margin increase", testGetMarginIncrease)
 	t.Run("margin increase, negative payment", TestGetMarginIncreaseNegativePayment)
 	t.Run("test pathological case with out of order points", testOutOfOrderPointsBeforePeriodStart)
-	t.Run("test update perpetual", testUpdatePerpetual)
+	t.Run("test update perpetual", TestUpdatePerpetual)
 }
 
 func TestExternalDataPointTWAPInSequence(t *testing.T) {
@@ -736,39 +737,324 @@ func TestGetMarginIncreaseNegativePayment(t *testing.T) {
 	assert.Equal(t, "-5", inc.String())
 }
 
-func testUpdatePerpetual(t *testing.T) {
+func TestUpdatePerpetual(t *testing.T) {
 	// margin factor is 0.5
 	perp := testPerpetualWithOpts(t, "0", "0", "0", "0.5")
 	defer perp.ctrl.Finish()
 	ctx := context.Background()
 
 	// test data
+	// st 1695710684000000000 nd 1695712484000000000
 	points := getTestDataPoints(t)
 	perp.broker.EXPECT().Send(gomock.Any()).Times(1)
-	perp.perpetual.OnLeaveOpeningAuction(ctx, 1000)
-	submitDataWithDifference(t, perp, points, 10)
-
-	// query margin factor before update
-	lastPoint := points[len(points)-1]
-	inc := perp.perpetual.GetMarginIncrease(lastPoint.t)
-	assert.Equal(t, "5", inc.String())
-
-	// do the perps update with a new margin factor
-	update := getTestPerpProd(t)
-	update.MarginFundingFactor = num.DecimalFromFloat(1)
-	err := perp.perpetual.Update(ctx, &types.InstrumentPerps{Perps: update}, perp.oe)
-	require.NoError(t, err)
-
-	// expect two unsubscriptions
-	assert.Equal(t, perp.unsub, 2)
-
-	// margin increase should now be double, which means the data-points were preserved
-	inc = perp.perpetual.GetMarginIncrease(lastPoint.t)
-	assert.Equal(t, "10", inc.String())
+	perp.perpetual.OnLeaveOpeningAuction(ctx, 1695710684000000000)
 
 	// now submit a data point and check it is expected i.e the funding period is still active
-	perp.broker.EXPECT().Send(gomock.Any()).Times(1)
-	assert.NoError(t, perp.perpetual.SubmitDataPoint(ctx, num.NewUint(123), lastPoint.t+int64(time.Hour)))
+	perp.broker.EXPECT().Send(gomock.Any()).AnyTimes()
+	perp.broker.EXPECT().SendBatch(gomock.Any()).AnyTimes()
+
+	points = []*testDataPoint{
+		{price: num.NewUint(26274100000), t: 1695712483988556000},
+		{price: num.NewUint(26280800000), t: 1695712478711589000},
+		{price: num.NewUint(26274100000), t: 1695712473437357000},
+		{price: num.NewUint(26274100000), t: 1695712468045834000},
+		{price: num.NewUint(26280800000), t: 1695712462177957000},
+		{price: num.NewUint(26280200000), t: 1695712412013435000},
+		{price: num.NewUint(26270500000), t: 1695712406197952000},
+		{price: num.NewUint(26280200000), t: 1695712400827544000},
+		{price: num.NewUint(26270500000), t: 1695712394177142000},
+		{price: num.NewUint(26279200000), t: 1695712388408480000},
+		{price: num.NewUint(26270500000), t: 1695712377487025000},
+		{price: num.NewUint(26279200000), t: 1695712371666697000},
+		{price: num.NewUint(26270500000), t: 1695712366268181000},
+		{price: num.NewUint(26279200000), t: 1695712354387618000},
+		{price: num.NewUint(26270500000), t: 1695712349310601000},
+		{price: num.NewUint(26279200000), t: 1695712343695950000},
+		{price: num.NewUint(26279200000), t: 1695712333157641000},
+		{price: num.NewUint(26279200000), t: 1695712321282868000},
+		{price: num.NewUint(26270500000), t: 1695712303475880000},
+		{price: num.NewUint(26279200000), t: 1695712297842002000},
+		{price: num.NewUint(26271500000), t: 1695712292159528000},
+		{price: num.NewUint(26279200000), t: 1695712286343633000},
+		{price: num.NewUint(26278200000), t: 1695712280789352000},
+		{price: num.NewUint(26278200000), t: 1695712275419698000},
+		{price: num.NewUint(26271500000), t: 1695712269898875000},
+		{price: num.NewUint(26278200000), t: 1695712263473403000},
+		{price: num.NewUint(26270500000), t: 1695712245927072000},
+		{price: num.NewUint(26270500000), t: 1695712240079604000},
+		{price: num.NewUint(26271500000), t: 1695712234208778000},
+		{price: num.NewUint(26271500000), t: 1695712223375650000},
+		{price: num.NewUint(26270500000), t: 1695712188130632000},
+		{price: num.NewUint(26278200000), t: 1695712175872871000},
+		{price: num.NewUint(26278200000), t: 1695712164689346000},
+		{price: num.NewUint(26270500000), t: 1695712159614377000},
+		{price: num.NewUint(26270500000), t: 1695712148355352000},
+		{price: num.NewUint(26279200000), t: 1695712142562210000},
+		{price: num.NewUint(26271500000), t: 1695712135982323000},
+		{price: num.NewUint(26279200000), t: 1695712095503371000},
+		{price: num.NewUint(26278200000), t: 1695712073330657000},
+		{price: num.NewUint(26271500000), t: 1695712056847928000},
+		{price: num.NewUint(26279200000), t: 1695712050115063000},
+		{price: num.NewUint(26271500000), t: 1695712043957382000},
+		{price: num.NewUint(26279200000), t: 1695712033812045000},
+		{price: num.NewUint(26271500000), t: 1695712022733947000},
+		{price: num.NewUint(26271500000), t: 1695712017206005000},
+		{price: num.NewUint(26278200000), t: 1695712006340503000},
+		{price: num.NewUint(26271500000), t: 1695711989404972000},
+		{price: num.NewUint(26278200000), t: 1695711984385553000},
+		{price: num.NewUint(26271500000), t: 1695711968504402000},
+		{price: num.NewUint(26279200000), t: 1695711961823866000},
+		{price: num.NewUint(26271500000), t: 1695711956518579000},
+		{price: num.NewUint(26278200000), t: 1695711951268333000},
+		{price: num.NewUint(26271500000), t: 1695711946228906000},
+		{price: num.NewUint(26278200000), t: 1695711935261745000},
+		{price: num.NewUint(26271500000), t: 1695711929785170000},
+		{price: num.NewUint(26271500000), t: 1695711924273156000},
+		{price: num.NewUint(26278200000), t: 1695711919224365000},
+		{price: num.NewUint(26271500000), t: 1695711913736125000},
+		{price: num.NewUint(26278200000), t: 1695711901853197000},
+		{price: num.NewUint(26271500000), t: 1695711896812022000},
+		{price: num.NewUint(26271500000), t: 1695711891424377000},
+		{price: num.NewUint(26271500000), t: 1695711886000070000},
+		{price: num.NewUint(26278200000), t: 1695711880743359000},
+		{price: num.NewUint(26271500000), t: 1695711875458003000},
+		{price: num.NewUint(26278200000), t: 1695711869501814000},
+		{price: num.NewUint(26271500000), t: 1695711864129401000},
+		{price: num.NewUint(26278200000), t: 1695711858725056000},
+		{price: num.NewUint(26271500000), t: 1695711853238422000},
+		{price: num.NewUint(26279200000), t: 1695711847961126000},
+		{price: num.NewUint(26283200000), t: 1695711842499723000},
+		{price: num.NewUint(26268500000), t: 1695711837229288000},
+		{price: num.NewUint(26282200000), t: 1695711832144228000},
+		{price: num.NewUint(26269500000), t: 1695711827006009000},
+		{price: num.NewUint(26270500000), t: 1695711821964355000},
+		{price: num.NewUint(26279200000), t: 1695711816858753000},
+		{price: num.NewUint(26271500000), t: 1695711811673148000},
+		{price: num.NewUint(26270500000), t: 1695711806413596000},
+		{price: num.NewUint(26278200000), t: 1695711801345441000},
+		{price: num.NewUint(26281200000), t: 1695711795947409000},
+		{price: num.NewUint(26270500000), t: 1695711790590730000},
+		{price: num.NewUint(26271500000), t: 1695711785476724000},
+		{price: num.NewUint(26268500000), t: 1695711779880852000},
+		{price: num.NewUint(26269500000), t: 1695711774796680000},
+		{price: num.NewUint(26278200000), t: 1695711769632513000},
+		{price: num.NewUint(26268500000), t: 1695711759118263000},
+		{price: num.NewUint(26282200000), t: 1695711753806517000},
+		{price: num.NewUint(26268500000), t: 1695711748555825000},
+		{price: num.NewUint(26280200000), t: 1695711743194300000},
+		{price: num.NewUint(26279200000), t: 1695711737891687000},
+		{price: num.NewUint(26270500000), t: 1695711732343518000},
+		{price: num.NewUint(26270500000), t: 1695711727170987000},
+		{price: num.NewUint(26279200000), t: 1695711721810047000},
+		{price: num.NewUint(26278200000), t: 1695711716472074000},
+		{price: num.NewUint(26278200000), t: 1695711711220295000},
+		{price: num.NewUint(26269500000), t: 1695711706123260000},
+		{price: num.NewUint(26271500000), t: 1695711700886504000},
+		{price: num.NewUint(26269500000), t: 1695711695534426000},
+		{price: num.NewUint(26270500000), t: 1695711690480095000},
+		{price: num.NewUint(26279200000), t: 1695711685091433000},
+		{price: num.NewUint(26278200000), t: 1695711679829765000},
+		{price: num.NewUint(26281200000), t: 1695711674195010000},
+		{price: num.NewUint(26268500000), t: 1695711669026613000},
+		{price: num.NewUint(26268500000), t: 1695711663775700000},
+		{price: num.NewUint(26270500000), t: 1695711658364642000},
+		{price: num.NewUint(26270500000), t: 1695711653146260000},
+		{price: num.NewUint(26278200000), t: 1695711647456440000},
+		{price: num.NewUint(26269500000), t: 1695711642017158000},
+		{price: num.NewUint(26280200000), t: 1695711636648031000},
+		{price: num.NewUint(26278200000), t: 1695711631518158000},
+		{price: num.NewUint(26271500000), t: 1695711625692800000},
+		{price: num.NewUint(26280200000), t: 1695711620172878000},
+		{price: num.NewUint(26280200000), t: 1695711614857950000},
+		{price: num.NewUint(26270500000), t: 1695711609255838000},
+		{price: num.NewUint(26271500000), t: 1695711603605091000},
+		{price: num.NewUint(26271500000), t: 1695711597883464000},
+		{price: num.NewUint(26280200000), t: 1695711592771353000},
+		{price: num.NewUint(26270500000), t: 1695711587027686000},
+		{price: num.NewUint(26268500000), t: 1695711581661385000},
+		{price: num.NewUint(26282200000), t: 1695711576141119000},
+		{price: num.NewUint(26281200000), t: 1695711570553562000},
+		{price: num.NewUint(26269500000), t: 1695711565206909000},
+		{price: num.NewUint(26279200000), t: 1695711559984629000},
+		{price: num.NewUint(26271500000), t: 1695711554487792000},
+		{price: num.NewUint(26268900000), t: 1695711549020727000},
+		{price: num.NewUint(26268500000), t: 1695711543629306000},
+		{price: num.NewUint(26280200000), t: 1695711538269819000},
+		{price: num.NewUint(26270500000), t: 1695711533139625000},
+		{price: num.NewUint(26268500000), t: 1695711527862792000},
+		{price: num.NewUint(26282200000), t: 1695711522653865000},
+		{price: num.NewUint(26281200000), t: 1695711517382999000},
+		{price: num.NewUint(26279200000), t: 1695711511995711000},
+		{price: num.NewUint(26278200000), t: 1695711506909359000},
+		{price: num.NewUint(26279200000), t: 1695711501843214000},
+		{price: num.NewUint(26278200000), t: 1695711496498798000},
+		{price: num.NewUint(26280200000), t: 1695711491040968000},
+		{price: num.NewUint(26270500000), t: 1695711485847186000},
+		{price: num.NewUint(26271500000), t: 1695711480447131000},
+		{price: num.NewUint(26278200000), t: 1695711475442605000},
+		{price: num.NewUint(26283200000), t: 1695711470069625000},
+		{price: num.NewUint(26268500000), t: 1695711464978794000},
+		{price: num.NewUint(26269500000), t: 1695711459951565000},
+		{price: num.NewUint(26269500000), t: 1695711454452735000},
+		{price: num.NewUint(26270500000), t: 1695711448685194000},
+		{price: num.NewUint(26279200000), t: 1695711443399557000},
+		{price: num.NewUint(26271500000), t: 1695711438354414000},
+		{price: num.NewUint(26269500000), t: 1695711432588909000},
+		{price: num.NewUint(26270000000), t: 1695711427492188000},
+		{price: num.NewUint(26279200000), t: 1695711422346311000},
+		{price: num.NewUint(26278200000), t: 1695711417194422000},
+		{price: num.NewUint(26270500000), t: 1695711411836401000},
+		{price: num.NewUint(26282200000), t: 1695711406262612000},
+		{price: num.NewUint(26282200000), t: 1695711401009882000},
+		{price: num.NewUint(26280200000), t: 1695711395830417000},
+		{price: num.NewUint(26280200000), t: 1695711390647109000},
+		{price: num.NewUint(26270000000), t: 1695711385537051000},
+		{price: num.NewUint(26271500000), t: 1695711380469202000},
+		{price: num.NewUint(26280200000), t: 1695711374797746000},
+		{price: num.NewUint(26279200000), t: 1695711369419438000},
+		{price: num.NewUint(26278200000), t: 1695711363962475000},
+		{price: num.NewUint(26281200000), t: 1695711358501685000},
+		{price: num.NewUint(26270000000), t: 1695711353272262000},
+		{price: num.NewUint(26280200000), t: 1695711348036576000},
+		{price: num.NewUint(26271500000), t: 1695711342956549000},
+		{price: num.NewUint(26279200000), t: 1695711337649101000},
+		{price: num.NewUint(26271500000), t: 1695711332215005000},
+		{price: num.NewUint(26270000000), t: 1695711327213541000},
+		{price: num.NewUint(26279200000), t: 1695711321904173000},
+		{price: num.NewUint(26271500000), t: 1695711316411230000},
+		{price: num.NewUint(26270500000), t: 1695711310819957000},
+		{price: num.NewUint(26280200000), t: 1695711305574014000},
+		{price: num.NewUint(26280200000), t: 1695711300358683000},
+		{price: num.NewUint(26279200000), t: 1695711295008246000},
+		{price: num.NewUint(26270000000), t: 1695711289807801000},
+		{price: num.NewUint(26270000000), t: 1695711284653516000},
+		{price: num.NewUint(26271500000), t: 1695711279501202000},
+		{price: num.NewUint(26268500000), t: 1695711269095938000},
+		{price: num.NewUint(26280200000), t: 1695711264067687000},
+		{price: num.NewUint(26271500000), t: 1695711258858129000},
+		{price: num.NewUint(26269500000), t: 1695711253842229000},
+		{price: num.NewUint(26269500000), t: 1695711248657779000},
+		{price: num.NewUint(26269500000), t: 1695711242909668000},
+		{price: num.NewUint(26270500000), t: 1695711237310804000},
+		{price: num.NewUint(26279200000), t: 1695711231709865000},
+		{price: num.NewUint(26279200000), t: 1695711226555922000},
+		{price: num.NewUint(26279200000), t: 1695711221109244000},
+		{price: num.NewUint(26269500000), t: 1695711215897580000},
+		{price: num.NewUint(26269500000), t: 1695711210421524000},
+		{price: num.NewUint(26280200000), t: 1695711205217273000},
+		{price: num.NewUint(26271500000), t: 1695711199994668000},
+		{price: num.NewUint(26264900000), t: 1695711194374408000},
+		{price: num.NewUint(26264900000), t: 1695711189305886000},
+		{price: num.NewUint(26280200000), t: 1695711183532722000},
+		{price: num.NewUint(26269500000), t: 1695711178489283000},
+		{price: num.NewUint(26278200000), t: 1695711172754490000},
+		{price: num.NewUint(26271500000), t: 1695711167639593000},
+		{price: num.NewUint(26268500000), t: 1695711162183684000},
+		{price: num.NewUint(26281200000), t: 1695711157088087000},
+		{price: num.NewUint(26270500000), t: 1695711152027342000},
+		{price: num.NewUint(26271500000), t: 1695711146948276000},
+		{price: num.NewUint(26268500000), t: 1695711141834146000},
+		{price: num.NewUint(26268500000), t: 1695711136551167000},
+		{price: num.NewUint(26279200000), t: 1695711131217461000},
+		{price: num.NewUint(26278200000), t: 1695711126055500000},
+		{price: num.NewUint(26271500000), t: 1695711120759312000},
+		{price: num.NewUint(26279000000), t: 1695711115312693000},
+		{price: num.NewUint(26269500000), t: 1695711109980732000},
+		{price: num.NewUint(26281200000), t: 1695711104944890000},
+		{price: num.NewUint(26280200000), t: 1695711099787364000},
+		{price: num.NewUint(26279200000), t: 1695711094407785000},
+		{price: num.NewUint(26270500000), t: 1695711089212303000},
+		{price: num.NewUint(26265500000), t: 1695711084076397000},
+		{price: num.NewUint(26279200000), t: 1695711078909404000},
+		{price: num.NewUint(26271500000), t: 1695711073222635000},
+		{price: num.NewUint(26271500000), t: 1695711067828052000},
+		{price: num.NewUint(26271500000), t: 1695711062655760000},
+		{price: num.NewUint(26267500000), t: 1695711057407225000},
+		{price: num.NewUint(26281200000), t: 1695711052255836000},
+		{price: num.NewUint(26269500000), t: 1695711047071627000},
+		{price: num.NewUint(26270500000), t: 1695711041785910000},
+		{price: num.NewUint(26279200000), t: 1695711036593393000},
+		{price: num.NewUint(26278500000), t: 1695711031161880000},
+		{price: num.NewUint(26278500000), t: 1695711025984720000},
+		{price: num.NewUint(26279200000), t: 1695711020713280000},
+		{price: num.NewUint(26278500000), t: 1695711015545532000},
+		{price: num.NewUint(26279500000), t: 1695711009986472000},
+		{price: num.NewUint(26279500000), t: 1695711004637326000},
+		{price: num.NewUint(26280500000), t: 1695710999376525000},
+		{price: num.NewUint(26278500000), t: 1695710994254356000},
+		{price: num.NewUint(26289100000), t: 1695710988616405000},
+		{price: num.NewUint(26280500000), t: 1695710983350593000},
+		{price: num.NewUint(26281500000), t: 1695710978054918000},
+		{price: num.NewUint(26280500000), t: 1695710972871553000},
+		{price: num.NewUint(26289100000), t: 1695710967463711000},
+		{price: num.NewUint(26281500000), t: 1695710961665622000},
+		{price: num.NewUint(26279500000), t: 1695710956450322000},
+		{price: num.NewUint(26290100000), t: 1695710951016352000},
+		{price: num.NewUint(26276500000), t: 1695710945260157000},
+		{price: num.NewUint(26278500000), t: 1695710939687792000},
+		{price: num.NewUint(26290100000), t: 1695710934418659000},
+		{price: num.NewUint(26279500000), t: 1695710929255532000},
+		{price: num.NewUint(26288100000), t: 1695710923688315000},
+		{price: num.NewUint(26266900000), t: 1695710918447960000},
+		{price: num.NewUint(26275500000), t: 1695710913242389000},
+		{price: num.NewUint(26275500000), t: 1695710907870997000},
+		{price: num.NewUint(26264900000), t: 1695710902690206000},
+		{price: num.NewUint(26279500000), t: 1695710897428120000},
+		{price: num.NewUint(26267900000), t: 1695710891735156000},
+		{price: num.NewUint(26267900000), t: 1695710886522175000},
+		{price: num.NewUint(26276500000), t: 1695710881200321000},
+		{price: num.NewUint(26267900000), t: 1695710876151199000},
+		{price: num.NewUint(26266900000), t: 1695710871077299000},
+		{price: num.NewUint(26276500000), t: 1695710865532192000},
+		{price: num.NewUint(26275500000), t: 1695710859710597000},
+		{price: num.NewUint(26268900000), t: 1695710854616313000},
+		{price: num.NewUint(26275500000), t: 1695710848812067000},
+		{price: num.NewUint(26268900000), t: 1695710843545420000},
+		{price: num.NewUint(26264900000), t: 1695710838374483000},
+		{price: num.NewUint(26266900000), t: 1695710832821801000},
+		{price: num.NewUint(26266900000), t: 1695710827548482000},
+		{price: num.NewUint(26276500000), t: 1695710822307620000},
+		{price: num.NewUint(26275500000), t: 1695710816963022000},
+		{price: num.NewUint(26276500000), t: 1695710811859900000},
+		{price: num.NewUint(26276500000), t: 1695710800815513000},
+		{price: num.NewUint(26265900000), t: 1695710795739907000},
+		{price: num.NewUint(26267900000), t: 1695710790505187000},
+		{price: num.NewUint(26275500000), t: 1695710785334602000},
+		{price: num.NewUint(26275500000), t: 1695710779979031000},
+		{price: num.NewUint(26275500000), t: 1695710774770529000},
+		{price: num.NewUint(26275500000), t: 1695710769057359000},
+		{price: num.NewUint(26275500000), t: 1695710763888678000},
+		{price: num.NewUint(26275500000), t: 1695710758729327000},
+		{price: num.NewUint(26265900000), t: 1695710753512164000},
+		{price: num.NewUint(26275500000), t: 1695710748433756000},
+		{price: num.NewUint(26268900000), t: 1695710743227908000},
+		{price: num.NewUint(26275500000), t: 1695710738208568000},
+		{price: num.NewUint(26266900000), t: 1695710733090273000},
+		{price: num.NewUint(26267900000), t: 1695710727774367000},
+		{price: num.NewUint(26268900000), t: 1695710722654310000},
+		{price: num.NewUint(26268900000), t: 1695710717412332000},
+		{price: num.NewUint(26268900000), t: 1695710711788331000},
+		{price: num.NewUint(26268900000), t: 1695710706413224000},
+		{price: num.NewUint(26275500000), t: 1695710701040221000},
+		{price: num.NewUint(26268900000), t: 1695710695340581000},
+		{price: num.NewUint(26275500000), t: 1695710690179011000},
+		{price: num.NewUint(26268900000), t: 1695710684822992000},
+		{price: num.NewUint(26276500000), t: 1695710679547858000},
+	}
+
+	for i := range points {
+		j := rand.Intn(i + 1)
+		points[i], points[j] = points[j], points[i]
+	}
+
+	// for i := len(points) - 1; i >= 0; i-- {
+	for i := range points {
+		pp := points[i]
+		assert.NoError(t, perp.perpetual.SubmitDataPoint(ctx, pp.price, pp.t))
+	}
+
+	perp.perpetual.PromptSettlementCue(ctx, 1695712484000000000)
+	assert.False(t, true)
 }
 
 // submits the given data points as both external and interval but with the given different added to the internal price.
