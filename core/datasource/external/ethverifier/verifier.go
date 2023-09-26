@@ -195,14 +195,18 @@ func (s *Verifier) ProcessEthereumContractCallResult(callEvent ethcall.ContractC
 }
 
 func (s *Verifier) checkCallEventResult(ctx context.Context, callEvent ethcall.ContractCallEvent) error {
+	fmt.Println("CHECKING", callEvent.SpecId, callEvent.BlockHeight)
+
 	// Ensure that the ethtime on the call event matches the block number on the eth chain
 	// (submitting call events with malicious times could subvert, e.g. TWAPs on perp markets)
 	checkedTime, err := s.ethEngine.GetEthTime(ctx, callEvent.BlockHeight)
 	if err != nil {
+		fmt.Println("FAILED TIME CHECK HEIGHT")
 		return fmt.Errorf("unable to verify eth time at %d", callEvent.BlockHeight)
 	}
 
 	if checkedTime != callEvent.BlockTime {
+		fmt.Println("WRONG TIME")
 		return fmt.Errorf("call event for block time block %d alleges eth time %d - but found %d",
 			callEvent.BlockHeight, callEvent.BlockTime, checkedTime)
 	}
@@ -222,15 +226,18 @@ func (s *Verifier) checkCallEventResult(ctx context.Context, callEvent ethcall.C
 	}
 
 	if !bytes.Equal(callEvent.Result, checkResult.Bytes) {
+		fmt.Println("MISMATCH RES")
 		return fmt.Errorf("mismatched results for block %d", callEvent.BlockHeight)
 	}
 
 	initialTriggerTime, err := s.ethEngine.GetInitialTriggerTime(callEvent.SpecId)
 	if err != nil {
+		fmt.Println("NOT TRIGGER RES")
 		return fmt.Errorf("failed to get initial trigger time: %w", err)
 	}
 
 	if callEvent.BlockTime < initialTriggerTime {
+		fmt.Println("TO SOON")
 		return fmt.Errorf("call event block time %d is before the specification's initial time %d",
 			callEvent.BlockTime, initialTriggerTime)
 	}
@@ -245,9 +252,11 @@ func (s *Verifier) checkCallEventResult(ctx context.Context, callEvent ethcall.C
 	}
 
 	if !checkResult.PassesFilters {
+
+		fmt.Println("FAILED FILTER")
 		return fmt.Errorf("failed filter check")
 	}
-
+	fmt.Println("NO")
 	return nil
 }
 
