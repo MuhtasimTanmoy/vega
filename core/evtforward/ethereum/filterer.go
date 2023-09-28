@@ -872,9 +872,8 @@ func (f *blockTimeFetcher) fetchTimeByBlock(ctx context.Context, blockNumber uin
 
 // We are retrying infinitely, on purpose, as we don't want the Ethereum
 // Forwarder to exit, and this under any circumstances. Failure is not an option.
-func infiniteRetry(ctx context.Context, fn backoff.Operation, durationBetweenTwoRetry time.Duration) {
+func infiniteRetry(_ context.Context, fn backoff.Operation, durationBetweenTwoRetry time.Duration) {
 	// No need to retrieve the error, as we are waiting indefinitely for a
 	// success.
-	bo := backoff.WithContext(backoff.NewConstantBackOff(durationBetweenTwoRetry), ctx)
-	_ = backoff.Retry(fn, bo)
+	_ = backoff.Retry(fn, backoff.NewConstantBackOff(durationBetweenTwoRetry))
 }
