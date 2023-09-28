@@ -187,7 +187,7 @@ func NewMarketFromSnapshot(
 func (m *Market) GetState() *types.ExecSpotMarket {
 	parties := maps.Keys(m.parties)
 	sort.Strings(parties)
-
+	fmt.Println("GET STATE FOR", m.GetID())
 	em := &types.ExecSpotMarket{
 		Market:                     m.mkt.DeepClone(),
 		PriceMonitor:               m.pMonitor.GetState(),

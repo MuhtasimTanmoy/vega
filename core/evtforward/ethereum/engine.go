@@ -14,6 +14,7 @@ package ethereum
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"code.vegaprotocol.io/vega/core/types"
@@ -114,7 +115,7 @@ func (e *Engine) ReloadConf(cfg Config) {
 func (e *Engine) Start() {
 	ctx, cancelEthereumQueries := context.WithCancel(context.Background())
 	defer cancelEthereumQueries()
-
+	fmt.Println("CONTEXT with cancel", ctx)
 	e.cancelEthereumQueries = cancelEthereumQueries
 
 	if e.log.IsDebug() {
@@ -187,9 +188,12 @@ func (e *Engine) gatherEvents(ctx context.Context) {
 func (e *Engine) Stop() {
 	// Notify to stop on next iteration.
 	e.poller.Stop()
+	fmt.Println("poller stopped")
 	// Cancel any ongoing queries against Ethereum.
 	if e.cancelEthereumQueries != nil {
+		fmt.Println("calling cancel")
 		e.cancelEthereumQueries()
+		fmt.Println("queries cancelled")
 	}
 }
 
@@ -218,6 +222,7 @@ func (s *poller) Loop(fn func()) {
 	for {
 		select {
 		case <-s.done:
+			fmt.Print("polling stopped")
 			return
 		case <-s.ticker.C:
 			fn()
@@ -227,5 +232,6 @@ func (s *poller) Loop(fn func()) {
 
 // Stop stops the poller loop.
 func (s *poller) Stop() {
+	fmt.Println("stopping poller...")
 	s.done <- true
 }

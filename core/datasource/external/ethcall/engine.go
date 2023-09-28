@@ -101,6 +101,7 @@ func (e *Engine) StartAtHeight(height uint64, time uint64) {
 func (e *Engine) getCalls() map[string]Call {
 	e.mu.Lock()
 	defer e.mu.Unlock()
+	e.log.Info("getting call specs", logging.Int("ncalls", len(e.calls)))
 	calls := map[string]Call{}
 	for specID, call := range e.calls {
 		calls[specID] = call
@@ -188,22 +189,26 @@ func (e *Engine) GetInitialTriggerTime(id string) (uint64, error) {
 }
 
 func (e *Engine) OnSpecActivated(ctx context.Context, spec datasource.Spec) error {
+	fmt.Println("ACTIVE IT", spec.ID)
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	switch d := spec.Data.Content().(type) {
 	case common.Spec:
 		id := spec.ID
 		if _, ok := e.calls[id]; ok {
+			fmt.Println("DUPE")
 			return fmt.Errorf("duplicate spec: %s", id)
 		}
-
+		fmt.Println("NEW CALL")
 		ethCall, err := NewCall(d)
 		if err != nil {
+			fmt.Println("NEW CALL FAILED")
 			return fmt.Errorf("failed to create data source: %w", err)
 		}
 
 		e.calls[id] = ethCall
 	}
+	fmt.Println("DONE")
 
 	return nil
 }
@@ -248,8 +253,9 @@ func (e *Engine) Poll(ctx context.Context, wallTime time.Time) {
 			e.log.Errorf("failed to get next block header: %w", err)
 			return
 		}
-
+		e.log.Info("considering", logging.BigInt("ethBlock", nextEthBlock.Number()))
 		for specID, call := range e.getCalls() {
+			fmt.Println("calling", specID, call.address)
 			if call.triggered(prevEthBlock, nextEthBlock) {
 				res, err := call.Call(ctx, e.client, nextEthBlock.NumberU64())
 				if err != nil {
@@ -261,7 +267,10 @@ func (e *Engine) Poll(ctx context.Context, wallTime time.Time) {
 
 				if res.PassesFilters {
 					event := makeChainEvent(res, specID, nextEthBlock)
+					fmt.Println("pass filteres, forwarding")
 					e.forwarder.ForwardFromSelf(event)
+				} else {
+					fmt.Println("FAILED filters, not forwarding")
 				}
 			}
 		}

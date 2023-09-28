@@ -148,9 +148,11 @@ func (e *Engine) Subscribe(ctx context.Context, spec Spec, cb OnMatchedData) (Su
 	if cb == nil {
 		panic(fmt.Sprintf("a callback is required for spec %v", spec))
 	}
+	fmt.Println("subscribing", spec.id)
 	updatedSubscription, firstSubscription := e.subscriptions.addSubscriber(spec, cb, e.timeService.GetTimeNow())
 	if firstSubscription {
 		for _, listener := range e.specActivationListeners {
+			fmt.Println("ON ACTIVATED", spec.id)
 			err := listener.OnSpecActivated(ctx, *spec.OriginalSpec)
 			if err != nil {
 				return 0, nil, fmt.Errorf("failed to activate spec: %w", err)

@@ -270,7 +270,7 @@ func (m *Market) GetState() *types.ExecMarket {
 
 	parties := maps.Keys(m.parties)
 	sort.Strings(parties)
-
+	fmt.Println("GET STATE FOR", m.GetID())
 	em := &types.ExecMarket{
 		Market:                     m.mkt.DeepClone(),
 		PriceMonitor:               m.pMonitor.GetState(),

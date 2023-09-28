@@ -94,29 +94,36 @@ func (c Call) Spec() ethcallcommon.Spec {
 }
 
 func (c Call) triggered(prevEthBlock blockish, currentEthBlock blockish) bool {
+	fmt.Println("check trigger")
 	switch trigger := c.spec.Trigger.(type) {
 	case ethcallcommon.TimeTrigger:
 		// Before initial?
 		if currentEthBlock.Time() < trigger.Initial {
+			fmt.Println("before initial", trigger.Initial, currentEthBlock.Time())
 			return false
 		}
 
 		// Crossing initial boundary?
 		if prevEthBlock.Time() < trigger.Initial && currentEthBlock.Time() >= trigger.Initial {
+			fmt.Println("CROSSING", trigger.Initial, currentEthBlock.Time())
 			return true
 		}
 
 		// After until?
 		if trigger.Until != 0 && currentEthBlock.Time() > trigger.Until {
+			fmt.Println("after until", trigger.Until, currentEthBlock.Time())
 			return false
 		}
 
 		if trigger.Every == 0 {
+			fmt.Println("every is zero")
 			return false
 		}
 		// Somewhere in the middle..
+
 		prevTriggerCount := (prevEthBlock.Time() - trigger.Initial) / trigger.Every
 		currentTriggerCount := (currentEthBlock.Time() - trigger.Initial) / trigger.Every
+		fmt.Println("something", currentTriggerCount, prevTriggerCount)
 		return currentTriggerCount > prevTriggerCount
 	}
 	return false

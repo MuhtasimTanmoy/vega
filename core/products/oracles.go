@@ -99,8 +99,10 @@ func (t *terminatingOracle) bindAll(ctx context.Context, oe OracleEngine, settle
 func (t *terminatingOracle) bindSettlement(ctx context.Context, oe OracleEngine, osForSettle *spec.Spec, cb spec.OnMatchedData) error {
 	err := osForSettle.EnsureBoundableProperty(t.binding.settlementProperty, t.binding.settlementType)
 	if err != nil {
+		fmt.Println("HELP")
 		return fmt.Errorf("invalid oracle spec binding for settlement data: %w", err)
 	}
+	fmt.Println("sub settle")
 	if t.settlementSubscriptionID, t.settleUnsub, err = oe.Subscribe(ctx, *osForSettle, cb); err != nil {
 		return fmt.Errorf("could not subscribe to oracle engine for settlement data: %w", err)
 	}
@@ -110,8 +112,10 @@ func (t *terminatingOracle) bindSettlement(ctx context.Context, oe OracleEngine,
 func (t *terminatingOracle) bindTermination(ctx context.Context, oe OracleEngine, osForTerm *spec.Spec, cb spec.OnMatchedData) error {
 	err := osForTerm.EnsureBoundableProperty(t.binding.terminationProperty, t.binding.terminationType)
 	if err != nil {
+		fmt.Println("HELP")
 		return fmt.Errorf("invalid oracle spec binding for trading termination: %w", err)
 	}
+	fmt.Println("sub term")
 	if t.terminationSubscriptionID, t.terminationUnsub, err = oe.Subscribe(ctx, *osForTerm, cb); err != nil {
 		return fmt.Errorf("could not subscribe to oracle engine for trading termination: %w", err)
 	}
