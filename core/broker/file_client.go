@@ -93,6 +93,7 @@ func WriteToBufferFile(bufferFile *os.File, bufferSeqNum uint64, event events.Ev
 	if err != nil {
 		return fmt.Errorf("failed to marshal bus event:%w", err)
 	}
+	fmt.Println("write", event.BlockNr())
 	return WriteRawToBufferFile(bufferFile, bufferSeqNum, rawEvent)
 }
 
@@ -107,8 +108,10 @@ func WriteRawToBufferFile(bufferFile *os.File, bufferSeqNum uint64, rawEvent []b
 	allBytes := append([]byte{}, sizeBytes...)
 	allBytes = append(allBytes, seqNumBytes...)
 	allBytes = append(allBytes, rawEvent...)
+	fmt.Println("actually writing", bufferSeqNum)
 	_, err := bufferFile.Write(allBytes)
 	if err != nil {
+		fmt.Println("failed", err)
 		return fmt.Errorf("failed to write to buffer file:%w", err)
 	}
 
