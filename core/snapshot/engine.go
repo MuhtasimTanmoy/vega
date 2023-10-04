@@ -696,13 +696,14 @@ func (e *Engine) snapshotNow(ctx context.Context, saveAsync bool) ([]byte, DoneC
 				e.log.Panic("Panic occurred", zap.Any("reason", r))
 			}
 		}()
-
+		t0 := time.Now()
 		if err := e.snapshotTree.SaveVersion(); err != nil {
 			// If this fails, we are screwed. The tree version is used to construct
 			// the root-hash so if we can't save it, the next snapshot we take
 			// will mismatch so we need to fail hard here.
 			e.log.Panic("Could not save the snapshot tree", logging.Error(err))
 		}
+		e.log.Info("saved snapshot to disk", logging.Float64("took", time.Since(t0).Seconds()))
 	}
 
 	var hash []byte
