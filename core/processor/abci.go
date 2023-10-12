@@ -272,7 +272,7 @@ func NewApp(
 	balanceChecker BalanceChecker,
 ) *App {
 	log = log.Named(namedLogger)
-	log.SetLevel(config.Level.Get())
+	log.SetLevel(logging.DebugLevel)
 
 	app := &App{
 		abci: abci.New(codec),

@@ -18,6 +18,7 @@ package abci
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 
 	"code.vegaprotocol.io/vega/core/blockchain"
 	vgcontext "code.vegaprotocol.io/vega/libs/context"
@@ -71,11 +72,12 @@ func (app *App) CheckTx(req types.RequestCheckTx) (resp types.ResponseCheckTx) {
 	if err != nil {
 		return blockchain.NewResponseCheckTxError(code, err)
 	}
-
+	fmt.Println("checking", tx.Command().String())
 	// check for spam and replay
 	if fn := app.OnCheckTxSpam; fn != nil {
 		resp = fn(tx)
 		if resp.IsErr() {
+			fmt.Println("failed spam", err)
 			return AddCommonCheckTxEvents(resp, tx)
 		}
 	}
@@ -84,6 +86,7 @@ func (app *App) CheckTx(req types.RequestCheckTx) (resp types.ResponseCheckTx) {
 	if fn := app.OnCheckTx; fn != nil {
 		ctx, resp = fn(ctx, req, tx)
 		if resp.IsErr() {
+			fmt.Println("failed oncheck general", err)
 			return AddCommonCheckTxEvents(resp, tx)
 		}
 	}
@@ -91,6 +94,7 @@ func (app *App) CheckTx(req types.RequestCheckTx) (resp types.ResponseCheckTx) {
 	// Lookup for check tx, skip if not found
 	if fn, ok := app.checkTxs[tx.Command()]; ok {
 		if err := fn(ctx, tx); err != nil {
+			fmt.Println("failed", err)
 			return AddCommonCheckTxEvents(blockchain.NewResponseCheckTxError(blockchain.AbciTxnInternalError, err), tx)
 		}
 	}
