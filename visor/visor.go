@@ -107,7 +107,7 @@ func (v *Visor) Run(ctx context.Context) error {
 
 	gracefulStop := make(chan os.Signal, 1)
 	signal.Notify(gracefulStop, syscall.SIGTERM, syscall.SIGINT)
-
+	v.log.Info("ready to roll binaries")
 	for {
 		runConf, err := config.ParseRunConfig(v.conf.CurrentRunConfigPath())
 		if err != nil {
@@ -154,8 +154,7 @@ func (v *Visor) Run(ctx context.Context) error {
 						return fmt.Errorf("failed to force kill the running processes: %w", err)
 					}
 				}
-			case <-ctx.Done():
-				return ctx.Err()
+				return nil
 			case err := <-binErrs:
 				v.log.Error("Binaries executions has failed", logging.Error(err))
 

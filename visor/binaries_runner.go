@@ -108,15 +108,15 @@ func (r *BinariesRunner) runBinary(ctx context.Context, binPath string, args []s
 			return
 		}
 
-		r.log.Debug("Stopping binary", logging.String("binaryPath", binPath))
+		r.log.Info("Stopping binary", logging.String("binaryPath", binPath))
 
 		if err := cmd.Process.Signal(syscall.SIGTERM); err != nil {
-			r.log.Debug("Failed to stop binary, resorting to force kill",
+			r.log.Info("Failed to stop binary, resorting to force kill",
 				logging.String("binaryPath", binPath),
 				logging.Error(err),
 			)
 			if err := cmd.Process.Kill(); err != nil {
-				r.log.Debug("Failed to force kill binary",
+				r.log.Info("Failed to force kill binary",
 					logging.String("binaryPath", binPath),
 					logging.Error(err),
 				)
