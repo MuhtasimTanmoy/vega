@@ -18,6 +18,9 @@ package visor
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"code.vegaprotocol.io/vega/core/types"
@@ -102,6 +105,9 @@ func (v *Visor) Run(ctx context.Context) error {
 
 	var isRestarting bool
 
+	gracefulStop := make(chan os.Signal, 1)
+	signal.Notify(gracefulStop, syscall.SIGTERM, syscall.SIGINT)
+
 	for {
 		runConf, err := config.ParseRunConfig(v.conf.CurrentRunConfigPath())
 		if err != nil {
@@ -140,6 +146,14 @@ func (v *Visor) Run(ctx context.Context) error {
 	CheckLoop:
 		for {
 			select {
+			case sig := <-gracefulStop:
+				v.log.Info("Caught signal", logging.String("name", fmt.Sprintf("%+v", sig)))
+				if err := binRunner.Stop(); err != nil {
+					v.log.Info("Failed to stop binaries, resorting to force kill", logging.Error(err))
+					if err := binRunner.Kill(); err != nil {
+						return fmt.Errorf("failed to force kill the running processes: %w", err)
+					}
+				}
 			case <-ctx.Done():
 				return ctx.Err()
 			case err := <-binErrs:
