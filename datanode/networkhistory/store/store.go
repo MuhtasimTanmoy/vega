@@ -186,7 +186,7 @@ func New(ctx context.Context, log *logging.Logger, chainID string, cfg Config, n
 	if p.ipfsNode.PNetFingerprint != nil {
 		log.Infof("Swarm is limited to private network of peers with the fingerprint %x", p.ipfsNode.PNetFingerprint)
 	}
-
+	fmt.Println("HEELO", p.ipfsNode.DAG)
 	p.ipfsAPI, err = coreapi.NewCoreAPI(p.ipfsNode)
 
 	if err != nil {
@@ -370,7 +370,7 @@ func (p *Store) AddSnapshotData(ctx context.Context, s segment.Unpublished) (err
 
 func (p *Store) CollectGarbage(ctx context.Context) (err error) {
 	p.lastGC = time.Now()
-	p.log.Debug("AddSnapshotData: removing old history segments")
+	p.log.Info("AddSnapshotData: removing old history segments")
 	segments, err := p.garbageCollectOldHistorySegments(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to remove old history segments:%w", err)
@@ -640,6 +640,20 @@ func (p *Store) FetchHistorySegment(ctx context.Context, historySegmentID string
 		return segment.Full{}, fmt.Errorf("failed to parse snapshotId into CID:%w", err)
 	}
 
+	addrInfo, err := p.ipfsAPI.Dht().FindProviders(ctx, path.IpfsPath(contentID))
+	if err != nil {
+		fmt.Println("CANNOT FIND", err)
+		return segment.Full{}, err
+	}
+
+	timer := time.NewTimer(5 * time.Second)
+	select {
+	case pp := <-addrInfo:
+		fmt.Println("PEER HAS IT", pp)
+	case <-timer.C:
+		fmt.Println("WWW OUT OF TIME")
+	}
+
 	rootNodeFile, err := p.ipfsAPI.Unixfs().Get(ctx, path.IpfsPath(contentID))
 	if err != nil {
 		connInfo, swarmError := p.ipfsAPI.Swarm().Peers(ctx)
@@ -650,6 +664,8 @@ func (p *Store) FetchHistorySegment(ctx context.Context, historySegmentID string
 		peerAddrs := ""
 		for _, peer := range connInfo {
 			peerAddrs += fmt.Sprintf(",%s", peer.Address())
+			blah, err := p.ipfsAPI.Dht().FindPeer(ctx, peer.ID())
+			fmt.Println("WWW blah", blah, err)
 		}
 
 		return segment.Full{}, fmt.Errorf("could not get file with CID, connected peer addresses %s: %w", peerAddrs, err)
@@ -970,16 +986,21 @@ func (p *Store) addFileToIpfs(ctx context.Context, path string) (cid.Cid, error)
 	if err != nil {
 		return cid.Cid{}, err
 	}
+	defer f.Close()
 
 	fileCid, err := p.ipfsAPI.Unixfs().Add(ctx, f)
 	if err != nil {
 		return cid.Cid{}, fmt.Errorf("failed to add file: %s", err)
 	}
+	p.log.Info("Added new segment")
+
+	p.ipfsAPI.Dht().Provide(ctx, fileCid)
 
 	err = p.ipfsAPI.Pin().Add(ctx, fileCid)
 	if err != nil {
 		return cid.Cid{}, fmt.Errorf("failed to pin file: %s", err)
 	}
+	p.log.Info("Pinned new segment")
 	return fileCid.Cid(), nil
 }
 
