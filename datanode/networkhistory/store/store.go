@@ -39,7 +39,7 @@ import (
 	icore "github.com/ipfs/boxo/coreiface"
 	"github.com/ipfs/go-cid"
 	files "github.com/ipfs/go-libipfs/files"
-	ipfslogging "github.com/ipfs/go-log"
+	ipfslogging "github.com/ipfs/go-log/v2"
 	"github.com/ipfs/interface-go-ipfs-core/path"
 	"github.com/ipfs/kubo/config"
 	serialize "github.com/ipfs/kubo/config/serialize"
@@ -114,7 +114,12 @@ var plugins *loader.PluginLoader
 
 func New(ctx context.Context, log *logging.Logger, chainID string, cfg Config, networkHistoryHome string, maxMemoryPercent uint8,
 ) (*Store, error) {
-	if log.IsDebug() {
+	if true {
+
+		cfg := ipfslogging.GetConfig()
+		cfg.Stderr = false
+		cfg.Stdout = true
+		ipfslogging.SetupLogging(cfg)
 		ipfslogging.SetDebugLogging()
 	}
 
