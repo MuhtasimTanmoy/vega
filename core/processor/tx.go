@@ -140,6 +140,12 @@ func (t Tx) Command() txn.Command {
 		return txn.ApplyReferralCodeCommand
 	case *commandspb.InputData_JoinTeam:
 		return txn.JoinTeamCommand
+	case *commandspb.InputData_SubmitAmm:
+		return txn.SubmitAMMCommand
+	case *commandspb.InputData_AmendAmm:
+		return txn.AmendAMMCommand
+	case *commandspb.InputData_CancelAmm:
+		return txn.CancelAMMCommand
 	default:
 		panic(fmt.Sprintf("command %T is not supported", cmd))
 	}
@@ -239,6 +245,12 @@ func (t Tx) GetCmd() interface{} {
 		return cmd.UpdateMarginMode
 	case *commandspb.InputData_JoinTeam:
 		return cmd.JoinTeam
+	case *commandspb.InputData_SubmitAmm:
+		return txn.SubmitAMMCommand
+	case *commandspb.InputData_AmendAmm:
+		return txn.AmendAMMCommand
+	case *commandspb.InputData_CancelAmm:
+		return txn.CancelAMMCommand
 	default:
 		return fmt.Errorf("command %T is not supported", cmd)
 	}
@@ -438,6 +450,24 @@ func (t Tx) Unmarshal(i interface{}) error {
 			return errors.New("failed to unmarshall to UpdateMarginMode")
 		}
 		*underlyingCmd = *cmd.UpdateMarginMode
+	case *commandspb.InputData_SubmitAmm:
+		underlyingCmd, ok := i.(*commandspb.SubmitAMM)
+		if !ok {
+			return errors.New("failed to unmarshall to SubmitAMM")
+		}
+		*underlyingCmd = *cmd.SubmitAmm
+	case *commandspb.InputData_AmendAmm:
+		underlyingCmd, ok := i.(*commandspb.AmendAMM)
+		if !ok {
+			return errors.New("failed to unmarshall to AmendAMM")
+		}
+		*underlyingCmd = *cmd.AmendAmm
+	case *commandspb.InputData_CancelAmm:
+		underlyingCmd, ok := i.(*commandspb.CancelAMM)
+		if !ok {
+			return errors.New("failed to unmarshall to CancelAMM")
+		}
+		*underlyingCmd = *cmd.CancelAmm
 	default:
 		return fmt.Errorf("command %T is not supported", cmd)
 	}
