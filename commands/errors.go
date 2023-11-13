@@ -82,6 +82,7 @@ var (
 	ErrMustBeAtMost3600                                = errors.New("must be at most 3600")
 	ErrMustBeWithinRangeGT0LT20                        = errors.New("price range must be strictly greater than 0 and less than or equal to 20")
 	ErrSizeIsTooLarge                                  = errors.New("size is too large")
+	ErrNoUpdatesProvided                               = errors.New("no updates provided")
 )
 
 type Errors map[string][]error

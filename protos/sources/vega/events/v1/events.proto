@@ -517,6 +517,9 @@ message TransactionResult {
     commands.v1.ApplyReferralCode apply_referral_code = 126;
     commands.v1.UpdateMarginMode update_margin_mode = 127;
     commands.v1.JoinTeam join_team = 128;
+    commands.v1.SubmitAMM submit_amm = 129;
+    commands.v1.AmendAMM amend_amm = 130;
+    commands.v1.CancelAMM cancel_amm = 131;
   }
 
   // extra details about the transaction processing

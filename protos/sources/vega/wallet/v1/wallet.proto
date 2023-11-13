@@ -38,6 +38,9 @@ message SubmitTransactionRequest {
     commands.v1.ApplyReferralCode apply_referral_code = 1020;
     commands.v1.UpdateMarginMode update_margin_mode = 1021;
     commands.v1.JoinTeam join_team = 1022;
+    commands.v1.SubmitAMM submit_amm = 1023;
+    commands.v1.AmendAMM amend_amm = 1024;
+    commands.v1.CancelAMM cancel_amm = 1035;
 
     // Validator commands
     commands.v1.NodeVote node_vote = 2002;

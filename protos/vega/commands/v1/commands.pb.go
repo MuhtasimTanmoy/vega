@@ -2058,6 +2058,207 @@ func (x *JoinTeam) GetId() string {
 	return ""
 }
 
+// Command that allow the submitter to create an AMM pool for a given market.
+type SubmitAMM struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// The market for which to create an AMM pool.
+	MarketId string `protobuf:"bytes,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	// The amount to be committed to the pool.
+	CommitmentAmount string `protobuf:"bytes,2,opt,name=commitment_amount,json=commitmentAmount,proto3" json:"commitment_amount,omitempty"`
+	// Wsed for rebasing position when creating/updating AMM
+	SlippageTolerance string `protobuf:"bytes,3,opt,name=slippage_tolerance,json=slippageTolerance,proto3" json:"slippage_tolerance,omitempty"`
+	// The concentrated liquidity parameters.
+	ConcentratedLiquidityParameters *SubmitAMM_ConcentratedLiquidityParameters `protobuf:"bytes,4,opt,name=concentrated_liquidity_parameters,json=concentratedLiquidityParameters,proto3" json:"concentrated_liquidity_parameters,omitempty"`
+}
+
+func (x *SubmitAMM) Reset() {
+	*x = SubmitAMM{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_vega_commands_v1_commands_proto_msgTypes[26]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SubmitAMM) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubmitAMM) ProtoMessage() {}
+
+func (x *SubmitAMM) ProtoReflect() protoreflect.Message {
+	mi := &file_vega_commands_v1_commands_proto_msgTypes[26]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubmitAMM.ProtoReflect.Descriptor instead.
+func (*SubmitAMM) Descriptor() ([]byte, []int) {
+	return file_vega_commands_v1_commands_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *SubmitAMM) GetMarketId() string {
+	if x != nil {
+		return x.MarketId
+	}
+	return ""
+}
+
+func (x *SubmitAMM) GetCommitmentAmount() string {
+	if x != nil {
+		return x.CommitmentAmount
+	}
+	return ""
+}
+
+func (x *SubmitAMM) GetSlippageTolerance() string {
+	if x != nil {
+		return x.SlippageTolerance
+	}
+	return ""
+}
+
+func (x *SubmitAMM) GetConcentratedLiquidityParameters() *SubmitAMM_ConcentratedLiquidityParameters {
+	if x != nil {
+		return x.ConcentratedLiquidityParameters
+	}
+	return nil
+}
+
+// Command that allow the submitter to create an AMM pool for a given market.
+type AmendAMM struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// The id of the market we want to amend the AMM pool.
+	MarketId string `protobuf:"bytes,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	// The amount to be committed to the pool.
+	CommitmentAmount *string `protobuf:"bytes,2,opt,name=commitment_amount,json=commitmentAmount,proto3,oneof" json:"commitment_amount,omitempty"`
+	// Wsed for rebasing position when creating/updating AMM
+	SlippageTolerance string `protobuf:"bytes,3,opt,name=slippage_tolerance,json=slippageTolerance,proto3" json:"slippage_tolerance,omitempty"`
+	// The concentrated liquidity parameters.
+	ConcentratedLiquidityParameters *AmendAMM_ConcentratedLiquidityParameters `protobuf:"bytes,4,opt,name=concentrated_liquidity_parameters,json=concentratedLiquidityParameters,proto3,oneof" json:"concentrated_liquidity_parameters,omitempty"`
+}
+
+func (x *AmendAMM) Reset() {
+	*x = AmendAMM{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_vega_commands_v1_commands_proto_msgTypes[27]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *AmendAMM) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AmendAMM) ProtoMessage() {}
+
+func (x *AmendAMM) ProtoReflect() protoreflect.Message {
+	mi := &file_vega_commands_v1_commands_proto_msgTypes[27]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AmendAMM.ProtoReflect.Descriptor instead.
+func (*AmendAMM) Descriptor() ([]byte, []int) {
+	return file_vega_commands_v1_commands_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *AmendAMM) GetMarketId() string {
+	if x != nil {
+		return x.MarketId
+	}
+	return ""
+}
+
+func (x *AmendAMM) GetCommitmentAmount() string {
+	if x != nil && x.CommitmentAmount != nil {
+		return *x.CommitmentAmount
+	}
+	return ""
+}
+
+func (x *AmendAMM) GetSlippageTolerance() string {
+	if x != nil {
+		return x.SlippageTolerance
+	}
+	return ""
+}
+
+func (x *AmendAMM) GetConcentratedLiquidityParameters() *AmendAMM_ConcentratedLiquidityParameters {
+	if x != nil {
+		return x.ConcentratedLiquidityParameters
+	}
+	return nil
+}
+
+// Command that allow the submitter to create an AMM pool for a given market.
+type CancelAMM struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// The market ID.
+	MarketId string `protobuf:"bytes,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+}
+
+func (x *CancelAMM) Reset() {
+	*x = CancelAMM{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_vega_commands_v1_commands_proto_msgTypes[28]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CancelAMM) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CancelAMM) ProtoMessage() {}
+
+func (x *CancelAMM) ProtoReflect() protoreflect.Message {
+	mi := &file_vega_commands_v1_commands_proto_msgTypes[28]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CancelAMM.ProtoReflect.Descriptor instead.
+func (*CancelAMM) Descriptor() ([]byte, []int) {
+	return file_vega_commands_v1_commands_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *CancelAMM) GetMarketId() string {
+	if x != nil {
+		return x.MarketId
+	}
+	return ""
+}
+
 type CreateReferralSet_Team struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -2076,7 +2277,7 @@ type CreateReferralSet_Team struct {
 func (x *CreateReferralSet_Team) Reset() {
 	*x = CreateReferralSet_Team{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vega_commands_v1_commands_proto_msgTypes[26]
+		mi := &file_vega_commands_v1_commands_proto_msgTypes[29]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2089,7 +2290,7 @@ func (x *CreateReferralSet_Team) String() string {
 func (*CreateReferralSet_Team) ProtoMessage() {}
 
 func (x *CreateReferralSet_Team) ProtoReflect() protoreflect.Message {
-	mi := &file_vega_commands_v1_commands_proto_msgTypes[26]
+	mi := &file_vega_commands_v1_commands_proto_msgTypes[29]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2151,7 +2352,7 @@ type UpdateReferralSet_Team struct {
 func (x *UpdateReferralSet_Team) Reset() {
 	*x = UpdateReferralSet_Team{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vega_commands_v1_commands_proto_msgTypes[27]
+		mi := &file_vega_commands_v1_commands_proto_msgTypes[30]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2164,7 +2365,7 @@ func (x *UpdateReferralSet_Team) String() string {
 func (*UpdateReferralSet_Team) ProtoMessage() {}
 
 func (x *UpdateReferralSet_Team) ProtoReflect() protoreflect.Message {
-	mi := &file_vega_commands_v1_commands_proto_msgTypes[27]
+	mi := &file_vega_commands_v1_commands_proto_msgTypes[30]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2206,6 +2407,138 @@ func (x *UpdateReferralSet_Team) GetClosed() bool {
 		return *x.Closed
 	}
 	return false
+}
+
+type SubmitAMM_ConcentratedLiquidityParameters struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// The upper price bound configuration for the pool.
+	UpperBound string `protobuf:"bytes,1,opt,name=upper_bound,json=upperBound,proto3" json:"upper_bound,omitempty"`
+	// The lower price bound configuration for the pool.
+	LowerBound string `protobuf:"bytes,2,opt,name=lower_bound,json=lowerBound,proto3" json:"lower_bound,omitempty"`
+	// The base price bound configuration for the pool.
+	Base string `protobuf:"bytes,3,opt,name=base,proto3" json:"base,omitempty"`
+}
+
+func (x *SubmitAMM_ConcentratedLiquidityParameters) Reset() {
+	*x = SubmitAMM_ConcentratedLiquidityParameters{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_vega_commands_v1_commands_proto_msgTypes[31]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SubmitAMM_ConcentratedLiquidityParameters) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubmitAMM_ConcentratedLiquidityParameters) ProtoMessage() {}
+
+func (x *SubmitAMM_ConcentratedLiquidityParameters) ProtoReflect() protoreflect.Message {
+	mi := &file_vega_commands_v1_commands_proto_msgTypes[31]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubmitAMM_ConcentratedLiquidityParameters.ProtoReflect.Descriptor instead.
+func (*SubmitAMM_ConcentratedLiquidityParameters) Descriptor() ([]byte, []int) {
+	return file_vega_commands_v1_commands_proto_rawDescGZIP(), []int{26, 0}
+}
+
+func (x *SubmitAMM_ConcentratedLiquidityParameters) GetUpperBound() string {
+	if x != nil {
+		return x.UpperBound
+	}
+	return ""
+}
+
+func (x *SubmitAMM_ConcentratedLiquidityParameters) GetLowerBound() string {
+	if x != nil {
+		return x.LowerBound
+	}
+	return ""
+}
+
+func (x *SubmitAMM_ConcentratedLiquidityParameters) GetBase() string {
+	if x != nil {
+		return x.Base
+	}
+	return ""
+}
+
+type AmendAMM_ConcentratedLiquidityParameters struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// The upper price bound configuration for the pool.
+	UpperBound *string `protobuf:"bytes,3,opt,name=upper_bound,json=upperBound,proto3,oneof" json:"upper_bound,omitempty"`
+	// The lower price bound configuration for the pool.
+	LowerBound *string `protobuf:"bytes,4,opt,name=lower_bound,json=lowerBound,proto3,oneof" json:"lower_bound,omitempty"`
+	// The base price bound configuration for the pool.
+	Base *string `protobuf:"bytes,5,opt,name=base,proto3,oneof" json:"base,omitempty"`
+}
+
+func (x *AmendAMM_ConcentratedLiquidityParameters) Reset() {
+	*x = AmendAMM_ConcentratedLiquidityParameters{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_vega_commands_v1_commands_proto_msgTypes[32]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *AmendAMM_ConcentratedLiquidityParameters) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AmendAMM_ConcentratedLiquidityParameters) ProtoMessage() {}
+
+func (x *AmendAMM_ConcentratedLiquidityParameters) ProtoReflect() protoreflect.Message {
+	mi := &file_vega_commands_v1_commands_proto_msgTypes[32]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AmendAMM_ConcentratedLiquidityParameters.ProtoReflect.Descriptor instead.
+func (*AmendAMM_ConcentratedLiquidityParameters) Descriptor() ([]byte, []int) {
+	return file_vega_commands_v1_commands_proto_rawDescGZIP(), []int{27, 0}
+}
+
+func (x *AmendAMM_ConcentratedLiquidityParameters) GetUpperBound() string {
+	if x != nil && x.UpperBound != nil {
+		return *x.UpperBound
+	}
+	return ""
+}
+
+func (x *AmendAMM_ConcentratedLiquidityParameters) GetLowerBound() string {
+	if x != nil && x.LowerBound != nil {
+		return *x.LowerBound
+	}
+	return ""
+}
+
+func (x *AmendAMM_ConcentratedLiquidityParameters) GetBase() string {
+	if x != nil && x.Base != nil {
+		return *x.Base
+	}
+	return ""
 }
 
 var File_vega_commands_v1_commands_proto protoreflect.FileDescriptor
@@ -2527,10 +2860,70 @@ var file_vega_commands_v1_commands_proto_rawDesc = []byte{
 	0x43, 0x6f, 0x64, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
 	0x52, 0x02, 0x69, 0x64, 0x22, 0x1a, 0x0a, 0x08, 0x4a, 0x6f, 0x69, 0x6e, 0x54, 0x65, 0x61, 0x6d,
 	0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64,
-	0x42, 0x33, 0x5a, 0x31, 0x63, 0x6f, 0x64, 0x65, 0x2e, 0x76, 0x65, 0x67, 0x61, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2e, 0x69, 0x6f, 0x2f, 0x76, 0x65, 0x67, 0x61, 0x2f, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x73, 0x2f, 0x76, 0x65, 0x67, 0x61, 0x2f, 0x63, 0x6f, 0x6d, 0x6d, 0x61, 0x6e,
-	0x64, 0x73, 0x2f, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x22, 0x87, 0x03, 0x0a, 0x09, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x41, 0x4d, 0x4d, 0x12, 0x1b,
+	0x0a, 0x09, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x08, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x49, 0x64, 0x12, 0x2b, 0x0a, 0x11, 0x63,
+	0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x6d, 0x65, 0x6e, 0x74, 0x5f, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x10, 0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x6d, 0x65,
+	0x6e, 0x74, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x2d, 0x0a, 0x12, 0x73, 0x6c, 0x69, 0x70,
+	0x70, 0x61, 0x67, 0x65, 0x5f, 0x74, 0x6f, 0x6c, 0x65, 0x72, 0x61, 0x6e, 0x63, 0x65, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x11, 0x73, 0x6c, 0x69, 0x70, 0x70, 0x61, 0x67, 0x65, 0x54, 0x6f,
+	0x6c, 0x65, 0x72, 0x61, 0x6e, 0x63, 0x65, 0x12, 0x87, 0x01, 0x0a, 0x21, 0x63, 0x6f, 0x6e, 0x63,
+	0x65, 0x6e, 0x74, 0x72, 0x61, 0x74, 0x65, 0x64, 0x5f, 0x6c, 0x69, 0x71, 0x75, 0x69, 0x64, 0x69,
+	0x74, 0x79, 0x5f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x18, 0x04, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x3b, 0x2e, 0x76, 0x65, 0x67, 0x61, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x61,
+	0x6e, 0x64, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x41, 0x4d, 0x4d,
+	0x2e, 0x43, 0x6f, 0x6e, 0x63, 0x65, 0x6e, 0x74, 0x72, 0x61, 0x74, 0x65, 0x64, 0x4c, 0x69, 0x71,
+	0x75, 0x69, 0x64, 0x69, 0x74, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73,
+	0x52, 0x1f, 0x63, 0x6f, 0x6e, 0x63, 0x65, 0x6e, 0x74, 0x72, 0x61, 0x74, 0x65, 0x64, 0x4c, 0x69,
+	0x71, 0x75, 0x69, 0x64, 0x69, 0x74, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72,
+	0x73, 0x1a, 0x77, 0x0a, 0x1f, 0x43, 0x6f, 0x6e, 0x63, 0x65, 0x6e, 0x74, 0x72, 0x61, 0x74, 0x65,
+	0x64, 0x4c, 0x69, 0x71, 0x75, 0x69, 0x64, 0x69, 0x74, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65,
+	0x74, 0x65, 0x72, 0x73, 0x12, 0x1f, 0x0a, 0x0b, 0x75, 0x70, 0x70, 0x65, 0x72, 0x5f, 0x62, 0x6f,
+	0x75, 0x6e, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x75, 0x70, 0x70, 0x65, 0x72,
+	0x42, 0x6f, 0x75, 0x6e, 0x64, 0x12, 0x1f, 0x0a, 0x0b, 0x6c, 0x6f, 0x77, 0x65, 0x72, 0x5f, 0x62,
+	0x6f, 0x75, 0x6e, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x6c, 0x6f, 0x77, 0x65,
+	0x72, 0x42, 0x6f, 0x75, 0x6e, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x62, 0x61, 0x73, 0x65, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x62, 0x61, 0x73, 0x65, 0x22, 0x84, 0x04, 0x0a, 0x08, 0x41,
+	0x6d, 0x65, 0x6e, 0x64, 0x41, 0x4d, 0x4d, 0x12, 0x1b, 0x0a, 0x09, 0x6d, 0x61, 0x72, 0x6b, 0x65,
+	0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x61, 0x72, 0x6b,
+	0x65, 0x74, 0x49, 0x64, 0x12, 0x30, 0x0a, 0x11, 0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x6d, 0x65,
+	0x6e, 0x74, 0x5f, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x48,
+	0x00, 0x52, 0x10, 0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x6d, 0x65, 0x6e, 0x74, 0x41, 0x6d, 0x6f,
+	0x75, 0x6e, 0x74, 0x88, 0x01, 0x01, 0x12, 0x2d, 0x0a, 0x12, 0x73, 0x6c, 0x69, 0x70, 0x70, 0x61,
+	0x67, 0x65, 0x5f, 0x74, 0x6f, 0x6c, 0x65, 0x72, 0x61, 0x6e, 0x63, 0x65, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x11, 0x73, 0x6c, 0x69, 0x70, 0x70, 0x61, 0x67, 0x65, 0x54, 0x6f, 0x6c, 0x65,
+	0x72, 0x61, 0x6e, 0x63, 0x65, 0x12, 0x8b, 0x01, 0x0a, 0x21, 0x63, 0x6f, 0x6e, 0x63, 0x65, 0x6e,
+	0x74, 0x72, 0x61, 0x74, 0x65, 0x64, 0x5f, 0x6c, 0x69, 0x71, 0x75, 0x69, 0x64, 0x69, 0x74, 0x79,
+	0x5f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x3a, 0x2e, 0x76, 0x65, 0x67, 0x61, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64,
+	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x41, 0x6d, 0x65, 0x6e, 0x64, 0x41, 0x4d, 0x4d, 0x2e, 0x43, 0x6f,
+	0x6e, 0x63, 0x65, 0x6e, 0x74, 0x72, 0x61, 0x74, 0x65, 0x64, 0x4c, 0x69, 0x71, 0x75, 0x69, 0x64,
+	0x69, 0x74, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x48, 0x01, 0x52,
+	0x1f, 0x63, 0x6f, 0x6e, 0x63, 0x65, 0x6e, 0x74, 0x72, 0x61, 0x74, 0x65, 0x64, 0x4c, 0x69, 0x71,
+	0x75, 0x69, 0x64, 0x69, 0x74, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73,
+	0x88, 0x01, 0x01, 0x1a, 0xaf, 0x01, 0x0a, 0x1f, 0x43, 0x6f, 0x6e, 0x63, 0x65, 0x6e, 0x74, 0x72,
+	0x61, 0x74, 0x65, 0x64, 0x4c, 0x69, 0x71, 0x75, 0x69, 0x64, 0x69, 0x74, 0x79, 0x50, 0x61, 0x72,
+	0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x12, 0x24, 0x0a, 0x0b, 0x75, 0x70, 0x70, 0x65, 0x72,
+	0x5f, 0x62, 0x6f, 0x75, 0x6e, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00, 0x52, 0x0a,
+	0x75, 0x70, 0x70, 0x65, 0x72, 0x42, 0x6f, 0x75, 0x6e, 0x64, 0x88, 0x01, 0x01, 0x12, 0x24, 0x0a,
+	0x0b, 0x6c, 0x6f, 0x77, 0x65, 0x72, 0x5f, 0x62, 0x6f, 0x75, 0x6e, 0x64, 0x18, 0x04, 0x20, 0x01,
+	0x28, 0x09, 0x48, 0x01, 0x52, 0x0a, 0x6c, 0x6f, 0x77, 0x65, 0x72, 0x42, 0x6f, 0x75, 0x6e, 0x64,
+	0x88, 0x01, 0x01, 0x12, 0x17, 0x0a, 0x04, 0x62, 0x61, 0x73, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28,
+	0x09, 0x48, 0x02, 0x52, 0x04, 0x62, 0x61, 0x73, 0x65, 0x88, 0x01, 0x01, 0x42, 0x0e, 0x0a, 0x0c,
+	0x5f, 0x75, 0x70, 0x70, 0x65, 0x72, 0x5f, 0x62, 0x6f, 0x75, 0x6e, 0x64, 0x42, 0x0e, 0x0a, 0x0c,
+	0x5f, 0x6c, 0x6f, 0x77, 0x65, 0x72, 0x5f, 0x62, 0x6f, 0x75, 0x6e, 0x64, 0x42, 0x07, 0x0a, 0x05,
+	0x5f, 0x62, 0x61, 0x73, 0x65, 0x42, 0x14, 0x0a, 0x12, 0x5f, 0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x74,
+	0x6d, 0x65, 0x6e, 0x74, 0x5f, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x24, 0x0a, 0x22, 0x5f,
+	0x63, 0x6f, 0x6e, 0x63, 0x65, 0x6e, 0x74, 0x72, 0x61, 0x74, 0x65, 0x64, 0x5f, 0x6c, 0x69, 0x71,
+	0x75, 0x69, 0x64, 0x69, 0x74, 0x79, 0x5f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72,
+	0x73, 0x22, 0x28, 0x0a, 0x09, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x41, 0x4d, 0x4d, 0x12, 0x1b,
+	0x0a, 0x09, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x08, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x49, 0x64, 0x42, 0x33, 0x5a, 0x31, 0x63,
+	0x6f, 0x64, 0x65, 0x2e, 0x76, 0x65, 0x67, 0x61, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
+	0x2e, 0x69, 0x6f, 0x2f, 0x76, 0x65, 0x67, 0x61, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x73, 0x2f,
+	0x76, 0x65, 0x67, 0x61, 0x2f, 0x63, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x73, 0x2f, 0x76, 0x31,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2546,51 +2939,56 @@ func file_vega_commands_v1_commands_proto_rawDescGZIP() []byte {
 }
 
 var file_vega_commands_v1_commands_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_vega_commands_v1_commands_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
+var file_vega_commands_v1_commands_proto_msgTypes = make([]protoimpl.MessageInfo, 33)
 var file_vega_commands_v1_commands_proto_goTypes = []interface{}{
-	(UpdateMarginMode_Mode)(0),             // 0: vega.commands.v1.UpdateMarginMode.Mode
-	(UndelegateSubmission_Method)(0),       // 1: vega.commands.v1.UndelegateSubmission.Method
-	(*BatchMarketInstructions)(nil),        // 2: vega.commands.v1.BatchMarketInstructions
-	(*StopOrdersSubmission)(nil),           // 3: vega.commands.v1.StopOrdersSubmission
-	(*StopOrderSetup)(nil),                 // 4: vega.commands.v1.StopOrderSetup
-	(*StopOrdersCancellation)(nil),         // 5: vega.commands.v1.StopOrdersCancellation
-	(*OrderSubmission)(nil),                // 6: vega.commands.v1.OrderSubmission
-	(*IcebergOpts)(nil),                    // 7: vega.commands.v1.IcebergOpts
-	(*UpdateMarginMode)(nil),               // 8: vega.commands.v1.UpdateMarginMode
-	(*OrderCancellation)(nil),              // 9: vega.commands.v1.OrderCancellation
-	(*OrderAmendment)(nil),                 // 10: vega.commands.v1.OrderAmendment
-	(*LiquidityProvisionSubmission)(nil),   // 11: vega.commands.v1.LiquidityProvisionSubmission
-	(*LiquidityProvisionCancellation)(nil), // 12: vega.commands.v1.LiquidityProvisionCancellation
-	(*LiquidityProvisionAmendment)(nil),    // 13: vega.commands.v1.LiquidityProvisionAmendment
-	(*WithdrawSubmission)(nil),             // 14: vega.commands.v1.WithdrawSubmission
-	(*ProposalSubmission)(nil),             // 15: vega.commands.v1.ProposalSubmission
-	(*VoteSubmission)(nil),                 // 16: vega.commands.v1.VoteSubmission
-	(*DelegateSubmission)(nil),             // 17: vega.commands.v1.DelegateSubmission
-	(*UndelegateSubmission)(nil),           // 18: vega.commands.v1.UndelegateSubmission
-	(*Transfer)(nil),                       // 19: vega.commands.v1.Transfer
-	(*OneOffTransfer)(nil),                 // 20: vega.commands.v1.OneOffTransfer
-	(*RecurringTransfer)(nil),              // 21: vega.commands.v1.RecurringTransfer
-	(*CancelTransfer)(nil),                 // 22: vega.commands.v1.CancelTransfer
-	(*IssueSignatures)(nil),                // 23: vega.commands.v1.IssueSignatures
-	(*CreateReferralSet)(nil),              // 24: vega.commands.v1.CreateReferralSet
-	(*UpdateReferralSet)(nil),              // 25: vega.commands.v1.UpdateReferralSet
-	(*ApplyReferralCode)(nil),              // 26: vega.commands.v1.ApplyReferralCode
-	(*JoinTeam)(nil),                       // 27: vega.commands.v1.JoinTeam
-	(*CreateReferralSet_Team)(nil),         // 28: vega.commands.v1.CreateReferralSet.Team
-	(*UpdateReferralSet_Team)(nil),         // 29: vega.commands.v1.UpdateReferralSet.Team
-	(vega.StopOrder_ExpiryStrategy)(0),     // 30: vega.StopOrder.ExpiryStrategy
-	(vega.Side)(0),                         // 31: vega.Side
-	(vega.Order_TimeInForce)(0),            // 32: vega.Order.TimeInForce
-	(vega.Order_Type)(0),                   // 33: vega.Order.Type
-	(*vega.PeggedOrder)(nil),               // 34: vega.PeggedOrder
-	(vega.PeggedReference)(0),              // 35: vega.PeggedReference
-	(*vega.WithdrawExt)(nil),               // 36: vega.WithdrawExt
-	(*vega.ProposalTerms)(nil),             // 37: vega.ProposalTerms
-	(*vega.ProposalRationale)(nil),         // 38: vega.ProposalRationale
-	(vega.Vote_Value)(0),                   // 39: vega.Vote.Value
-	(vega.AccountType)(0),                  // 40: vega.AccountType
-	(*vega.DispatchStrategy)(nil),          // 41: vega.DispatchStrategy
-	(NodeSignatureKind)(0),                 // 42: vega.commands.v1.NodeSignatureKind
+	(UpdateMarginMode_Mode)(0),                        // 0: vega.commands.v1.UpdateMarginMode.Mode
+	(UndelegateSubmission_Method)(0),                  // 1: vega.commands.v1.UndelegateSubmission.Method
+	(*BatchMarketInstructions)(nil),                   // 2: vega.commands.v1.BatchMarketInstructions
+	(*StopOrdersSubmission)(nil),                      // 3: vega.commands.v1.StopOrdersSubmission
+	(*StopOrderSetup)(nil),                            // 4: vega.commands.v1.StopOrderSetup
+	(*StopOrdersCancellation)(nil),                    // 5: vega.commands.v1.StopOrdersCancellation
+	(*OrderSubmission)(nil),                           // 6: vega.commands.v1.OrderSubmission
+	(*IcebergOpts)(nil),                               // 7: vega.commands.v1.IcebergOpts
+	(*UpdateMarginMode)(nil),                          // 8: vega.commands.v1.UpdateMarginMode
+	(*OrderCancellation)(nil),                         // 9: vega.commands.v1.OrderCancellation
+	(*OrderAmendment)(nil),                            // 10: vega.commands.v1.OrderAmendment
+	(*LiquidityProvisionSubmission)(nil),              // 11: vega.commands.v1.LiquidityProvisionSubmission
+	(*LiquidityProvisionCancellation)(nil),            // 12: vega.commands.v1.LiquidityProvisionCancellation
+	(*LiquidityProvisionAmendment)(nil),               // 13: vega.commands.v1.LiquidityProvisionAmendment
+	(*WithdrawSubmission)(nil),                        // 14: vega.commands.v1.WithdrawSubmission
+	(*ProposalSubmission)(nil),                        // 15: vega.commands.v1.ProposalSubmission
+	(*VoteSubmission)(nil),                            // 16: vega.commands.v1.VoteSubmission
+	(*DelegateSubmission)(nil),                        // 17: vega.commands.v1.DelegateSubmission
+	(*UndelegateSubmission)(nil),                      // 18: vega.commands.v1.UndelegateSubmission
+	(*Transfer)(nil),                                  // 19: vega.commands.v1.Transfer
+	(*OneOffTransfer)(nil),                            // 20: vega.commands.v1.OneOffTransfer
+	(*RecurringTransfer)(nil),                         // 21: vega.commands.v1.RecurringTransfer
+	(*CancelTransfer)(nil),                            // 22: vega.commands.v1.CancelTransfer
+	(*IssueSignatures)(nil),                           // 23: vega.commands.v1.IssueSignatures
+	(*CreateReferralSet)(nil),                         // 24: vega.commands.v1.CreateReferralSet
+	(*UpdateReferralSet)(nil),                         // 25: vega.commands.v1.UpdateReferralSet
+	(*ApplyReferralCode)(nil),                         // 26: vega.commands.v1.ApplyReferralCode
+	(*JoinTeam)(nil),                                  // 27: vega.commands.v1.JoinTeam
+	(*SubmitAMM)(nil),                                 // 28: vega.commands.v1.SubmitAMM
+	(*AmendAMM)(nil),                                  // 29: vega.commands.v1.AmendAMM
+	(*CancelAMM)(nil),                                 // 30: vega.commands.v1.CancelAMM
+	(*CreateReferralSet_Team)(nil),                    // 31: vega.commands.v1.CreateReferralSet.Team
+	(*UpdateReferralSet_Team)(nil),                    // 32: vega.commands.v1.UpdateReferralSet.Team
+	(*SubmitAMM_ConcentratedLiquidityParameters)(nil), // 33: vega.commands.v1.SubmitAMM.ConcentratedLiquidityParameters
+	(*AmendAMM_ConcentratedLiquidityParameters)(nil),  // 34: vega.commands.v1.AmendAMM.ConcentratedLiquidityParameters
+	(vega.StopOrder_ExpiryStrategy)(0),                // 35: vega.StopOrder.ExpiryStrategy
+	(vega.Side)(0),                                    // 36: vega.Side
+	(vega.Order_TimeInForce)(0),                       // 37: vega.Order.TimeInForce
+	(vega.Order_Type)(0),                              // 38: vega.Order.Type
+	(*vega.PeggedOrder)(nil),                          // 39: vega.PeggedOrder
+	(vega.PeggedReference)(0),                         // 40: vega.PeggedReference
+	(*vega.WithdrawExt)(nil),                          // 41: vega.WithdrawExt
+	(*vega.ProposalTerms)(nil),                        // 42: vega.ProposalTerms
+	(*vega.ProposalRationale)(nil),                    // 43: vega.ProposalRationale
+	(vega.Vote_Value)(0),                              // 44: vega.Vote.Value
+	(vega.AccountType)(0),                             // 45: vega.AccountType
+	(*vega.DispatchStrategy)(nil),                     // 46: vega.DispatchStrategy
+	(NodeSignatureKind)(0),                            // 47: vega.commands.v1.NodeSignatureKind
 }
 var file_vega_commands_v1_commands_proto_depIdxs = []int32{
 	9,  // 0: vega.commands.v1.BatchMarketInstructions.cancellations:type_name -> vega.commands.v1.OrderCancellation
@@ -2601,33 +2999,35 @@ var file_vega_commands_v1_commands_proto_depIdxs = []int32{
 	4,  // 5: vega.commands.v1.StopOrdersSubmission.rises_above:type_name -> vega.commands.v1.StopOrderSetup
 	4,  // 6: vega.commands.v1.StopOrdersSubmission.falls_below:type_name -> vega.commands.v1.StopOrderSetup
 	6,  // 7: vega.commands.v1.StopOrderSetup.order_submission:type_name -> vega.commands.v1.OrderSubmission
-	30, // 8: vega.commands.v1.StopOrderSetup.expiry_strategy:type_name -> vega.StopOrder.ExpiryStrategy
-	31, // 9: vega.commands.v1.OrderSubmission.side:type_name -> vega.Side
-	32, // 10: vega.commands.v1.OrderSubmission.time_in_force:type_name -> vega.Order.TimeInForce
-	33, // 11: vega.commands.v1.OrderSubmission.type:type_name -> vega.Order.Type
-	34, // 12: vega.commands.v1.OrderSubmission.pegged_order:type_name -> vega.PeggedOrder
+	35, // 8: vega.commands.v1.StopOrderSetup.expiry_strategy:type_name -> vega.StopOrder.ExpiryStrategy
+	36, // 9: vega.commands.v1.OrderSubmission.side:type_name -> vega.Side
+	37, // 10: vega.commands.v1.OrderSubmission.time_in_force:type_name -> vega.Order.TimeInForce
+	38, // 11: vega.commands.v1.OrderSubmission.type:type_name -> vega.Order.Type
+	39, // 12: vega.commands.v1.OrderSubmission.pegged_order:type_name -> vega.PeggedOrder
 	7,  // 13: vega.commands.v1.OrderSubmission.iceberg_opts:type_name -> vega.commands.v1.IcebergOpts
 	0,  // 14: vega.commands.v1.UpdateMarginMode.mode:type_name -> vega.commands.v1.UpdateMarginMode.Mode
-	32, // 15: vega.commands.v1.OrderAmendment.time_in_force:type_name -> vega.Order.TimeInForce
-	35, // 16: vega.commands.v1.OrderAmendment.pegged_reference:type_name -> vega.PeggedReference
-	36, // 17: vega.commands.v1.WithdrawSubmission.ext:type_name -> vega.WithdrawExt
-	37, // 18: vega.commands.v1.ProposalSubmission.terms:type_name -> vega.ProposalTerms
-	38, // 19: vega.commands.v1.ProposalSubmission.rationale:type_name -> vega.ProposalRationale
-	39, // 20: vega.commands.v1.VoteSubmission.value:type_name -> vega.Vote.Value
+	37, // 15: vega.commands.v1.OrderAmendment.time_in_force:type_name -> vega.Order.TimeInForce
+	40, // 16: vega.commands.v1.OrderAmendment.pegged_reference:type_name -> vega.PeggedReference
+	41, // 17: vega.commands.v1.WithdrawSubmission.ext:type_name -> vega.WithdrawExt
+	42, // 18: vega.commands.v1.ProposalSubmission.terms:type_name -> vega.ProposalTerms
+	43, // 19: vega.commands.v1.ProposalSubmission.rationale:type_name -> vega.ProposalRationale
+	44, // 20: vega.commands.v1.VoteSubmission.value:type_name -> vega.Vote.Value
 	1,  // 21: vega.commands.v1.UndelegateSubmission.method:type_name -> vega.commands.v1.UndelegateSubmission.Method
-	40, // 22: vega.commands.v1.Transfer.from_account_type:type_name -> vega.AccountType
-	40, // 23: vega.commands.v1.Transfer.to_account_type:type_name -> vega.AccountType
+	45, // 22: vega.commands.v1.Transfer.from_account_type:type_name -> vega.AccountType
+	45, // 23: vega.commands.v1.Transfer.to_account_type:type_name -> vega.AccountType
 	20, // 24: vega.commands.v1.Transfer.one_off:type_name -> vega.commands.v1.OneOffTransfer
 	21, // 25: vega.commands.v1.Transfer.recurring:type_name -> vega.commands.v1.RecurringTransfer
-	41, // 26: vega.commands.v1.RecurringTransfer.dispatch_strategy:type_name -> vega.DispatchStrategy
-	42, // 27: vega.commands.v1.IssueSignatures.kind:type_name -> vega.commands.v1.NodeSignatureKind
-	28, // 28: vega.commands.v1.CreateReferralSet.team:type_name -> vega.commands.v1.CreateReferralSet.Team
-	29, // 29: vega.commands.v1.UpdateReferralSet.team:type_name -> vega.commands.v1.UpdateReferralSet.Team
-	30, // [30:30] is the sub-list for method output_type
-	30, // [30:30] is the sub-list for method input_type
-	30, // [30:30] is the sub-list for extension type_name
-	30, // [30:30] is the sub-list for extension extendee
-	0,  // [0:30] is the sub-list for field type_name
+	46, // 26: vega.commands.v1.RecurringTransfer.dispatch_strategy:type_name -> vega.DispatchStrategy
+	47, // 27: vega.commands.v1.IssueSignatures.kind:type_name -> vega.commands.v1.NodeSignatureKind
+	31, // 28: vega.commands.v1.CreateReferralSet.team:type_name -> vega.commands.v1.CreateReferralSet.Team
+	32, // 29: vega.commands.v1.UpdateReferralSet.team:type_name -> vega.commands.v1.UpdateReferralSet.Team
+	33, // 30: vega.commands.v1.SubmitAMM.concentrated_liquidity_parameters:type_name -> vega.commands.v1.SubmitAMM.ConcentratedLiquidityParameters
+	34, // 31: vega.commands.v1.AmendAMM.concentrated_liquidity_parameters:type_name -> vega.commands.v1.AmendAMM.ConcentratedLiquidityParameters
+	32, // [32:32] is the sub-list for method output_type
+	32, // [32:32] is the sub-list for method input_type
+	32, // [32:32] is the sub-list for extension type_name
+	32, // [32:32] is the sub-list for extension extendee
+	0,  // [0:32] is the sub-list for field type_name
 }
 
 func init() { file_vega_commands_v1_commands_proto_init() }
@@ -2950,7 +3350,7 @@ func file_vega_commands_v1_commands_proto_init() {
 			}
 		}
 		file_vega_commands_v1_commands_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CreateReferralSet_Team); i {
+			switch v := v.(*SubmitAMM); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2962,7 +3362,67 @@ func file_vega_commands_v1_commands_proto_init() {
 			}
 		}
 		file_vega_commands_v1_commands_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AmendAMM); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_vega_commands_v1_commands_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CancelAMM); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_vega_commands_v1_commands_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CreateReferralSet_Team); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_vega_commands_v1_commands_proto_msgTypes[30].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*UpdateReferralSet_Team); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_vega_commands_v1_commands_proto_msgTypes[31].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SubmitAMM_ConcentratedLiquidityParameters); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_vega_commands_v1_commands_proto_msgTypes[32].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AmendAMM_ConcentratedLiquidityParameters); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2990,15 +3450,17 @@ func file_vega_commands_v1_commands_proto_init() {
 	file_vega_commands_v1_commands_proto_msgTypes[19].OneofWrappers = []interface{}{}
 	file_vega_commands_v1_commands_proto_msgTypes[22].OneofWrappers = []interface{}{}
 	file_vega_commands_v1_commands_proto_msgTypes[23].OneofWrappers = []interface{}{}
-	file_vega_commands_v1_commands_proto_msgTypes[26].OneofWrappers = []interface{}{}
 	file_vega_commands_v1_commands_proto_msgTypes[27].OneofWrappers = []interface{}{}
+	file_vega_commands_v1_commands_proto_msgTypes[29].OneofWrappers = []interface{}{}
+	file_vega_commands_v1_commands_proto_msgTypes[30].OneofWrappers = []interface{}{}
+	file_vega_commands_v1_commands_proto_msgTypes[32].OneofWrappers = []interface{}{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_vega_commands_v1_commands_proto_rawDesc,
 			NumEnums:      2,
-			NumMessages:   28,
+			NumMessages:   33,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
