@@ -17,11 +17,14 @@ package netparams
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sort"
 
 	"code.vegaprotocol.io/vega/core/types"
+	vgcontext "code.vegaprotocol.io/vega/libs/context"
 	"code.vegaprotocol.io/vega/libs/proto"
+	"code.vegaprotocol.io/vega/protos/vega"
 )
 
 type snapState struct {
@@ -137,8 +140,28 @@ func (s *Store) LoadState(ctx context.Context, pl *types.Payload) ([]types.State
 		if err := s.UpdateOptionalValidation(ctx, kv.Key, kv.Value, false, false); err != nil {
 			return nil, err
 		}
-
 		fromSnapshot[kv.Key] = struct{}{}
+	}
+
+	if vgcontext.InProgressUpgradeFrom(ctx, "v0.73.4") {
+		k := BlockchainsEthereumConfig
+		v := vega.EthereumConfig{}
+		if err := s.GetJSONStruct(BlockchainsEthereumConfig, &v); err != nil {
+			return nil, fmt.Errorf("could not get the ethereum config (%w)", err)
+		}
+
+		// change confirmations to 64
+		v.Confirmations = 64
+
+		b, err := json.Marshal(v)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal the updated ethereum config (%w)", err)
+		}
+
+		// re-save
+		if err := s.UpdateOptionalValidation(ctx, k, string(b), false, false); err != nil {
+			return nil, err
+		}
 	}
 
 	// Now they have been loaded, dispatch the changes so that the other engines pick them up
