@@ -375,4 +375,5 @@ replace (
 	github.com/muesli/cancelreader => github.com/vegaprotocol/cancelreader v0.0.0-20230724130739-6f2217a69449
 	github.com/shopspring/decimal => github.com/vegaprotocol/decimal v1.3.1-uint256
 	github.com/ipfs/kubo => /Users/wwestgarth/work/kubo
+	github.com/ipfs/boxo => /Users/wwestgarth/work/boxo
 )	
