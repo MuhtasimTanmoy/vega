@@ -42,6 +42,9 @@ var (
 	// ErrMarketDoesNotExist is returned when the market does not exist.
 	ErrMarketDoesNotExist = errors.New("market does not exist")
 
+	// ErrNotAFutureMarket is returned when the market isn't a future market.
+	ErrNotAFutureMarket = errors.New("not a future market")
+
 	// ErrNoMarketID is returned when invalid (empty) market id was supplied during market creation.
 	ErrNoMarketID = errors.New("no valid market id was supplied")
 
@@ -135,6 +138,8 @@ type netParamsValues struct {
 	liquidityV2SLANonPerformanceBondPenaltySlope num.Decimal
 	liquidityV2StakeToCCYVolume                  num.Decimal
 	liquidityV2ProvidersFeeCalculationTimeStep   time.Duration
+
+	ammCommitmentQuantum *num.Uint
 }
 
 func defaultNetParamsValues() netParamsValues {
@@ -164,6 +169,8 @@ func defaultNetParamsValues() netParamsValues {
 		liquidityV2SLANonPerformanceBondPenaltySlope: num.DecimalFromInt64(-1),
 		liquidityV2StakeToCCYVolume:                  num.DecimalFromInt64(-1),
 		liquidityV2ProvidersFeeCalculationTimeStep:   time.Second * 5,
+
+		ammCommitmentQuantum: num.UintZero(),
 	}
 }
 
@@ -278,6 +285,52 @@ func (e *Engine) Hash() []byte {
 	}
 
 	return crypto.Hash(bytes)
+}
+
+func (e *Engine) ensureIsFutureMarket(market string) error {
+	if _, exist := e.allMarkets[market]; !exist {
+		return ErrMarketDoesNotExist
+	}
+
+	if _, isFuture := e.futureMarkets[market]; !isFuture {
+		return ErrNotAFutureMarket
+	}
+
+	return nil
+}
+
+func (e *Engine) SubmitAMM(
+	ctx context.Context,
+	submit *types.SubmitAMM,
+	deterministicID string,
+) error {
+	if err := e.ensureIsFutureMarket(submit.MarketID); err != nil {
+		return err
+	}
+
+	return e.allMarkets[submit.MarketID].SubmitAMM(ctx, submit, deterministicID)
+}
+
+func (e *Engine) AmendAMM(
+	ctx context.Context,
+	submit *types.AmendAMM,
+) error {
+	if err := e.ensureIsFutureMarket(submit.MarketID); err != nil {
+		return err
+	}
+
+	return e.allMarkets[submit.MarketID].AmendAMM(ctx, submit)
+}
+
+func (e *Engine) CancelAMM(
+	ctx context.Context,
+	submit *types.CancelAMM,
+) error {
+	if err := e.ensureIsFutureMarket(submit.MarketID); err != nil {
+		return err
+	}
+
+	return e.allMarkets[submit.MarketID].CancelAMM(ctx, submit)
 }
 
 // RejectMarket will stop the execution of the market
@@ -880,6 +933,8 @@ func (e *Engine) propagateInitialNetParamsToFutureMarket(ctx context.Context, mk
 	}
 
 	mkt.OnMarketPartiesMaximumStopOrdersUpdate(ctx, e.npv.marketPartiesMaximumStopOrdersUpdate)
+
+	mkt.OnAMMMinCommitmentQuantumUpdate(ctx, e.npv.ammCommitmentQuantum)
 
 	e.propagateSLANetParams(ctx, mkt, isRestore)
 
@@ -1825,6 +1880,16 @@ func (e *Engine) OnMaxPeggedOrderUpdate(ctx context.Context, max *num.Uint) erro
 	return nil
 }
 
+func (e *Engine) OnMarketAMMMinCommitmentQuantum(ctx context.Context, c *num.Uint) error {
+	if e.log.IsDebug() {
+		e.log.Debug("update amm min commitment quantum",
+			logging.BigUint("commitment-quantum", c),
+		)
+	}
+	e.npv.ammCommitmentQuantum = c
+	return nil
+}
+
 func (e *Engine) MarketExists(market string) bool {
 	_, ok := e.allMarkets[market]
 	return ok
@@ -1895,7 +1960,7 @@ func (e *Engine) UpdateMarginMode(ctx context.Context, party, marketID string, m
 		riskFactors := market.GetRiskFactors()
 		rf := num.MaxD(riskFactors.Long, riskFactors.Short)
 		if marginFactor.LessThanOrEqual(rf) {
-			return fmt.Errorf("Margin factor (%s) must be greater than max(riskFactorLong (%s), riskFactorShort (%s))", marginFactor.String(), riskFactors.Long.String(), riskFactors.Short.String())
+			return fmt.Errorf("margin factor (%s) must be greater than max(riskFactorLong (%s), riskFactorShort (%s))", marginFactor.String(), riskFactors.Long.String(), riskFactors.Short.String())
 		}
 	}
 

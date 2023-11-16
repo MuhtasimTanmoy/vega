@@ -106,6 +106,10 @@ type ExecutionEngine interface {
 
 	// Margin mode
 	UpdateMarginMode(ctx context.Context, party, marketID string, marginMode types.MarginMode, marginFactor num.Decimal) error
+
+	SubmitAMM(ctx context.Context, sub *types.SubmitAMM, deterministicID string) error
+	AmendAMM(ctx context.Context, sub *types.AmendAMM) error
+	CancelAMM(ctx context.Context, sub *types.CancelAMM) error
 }
 
 type GovernanceEngine interface {

@@ -214,4 +214,9 @@ const (
 
 	TransferTypeFeeReferrerRewardPay        TransferType = proto.TransferType_TRANSFER_TYPE_FEE_REFERRER_REWARD_PAY
 	TransferTypeFeeReferrerRewardDistribute TransferType = proto.TransferType_TRANSFER_TYPE_FEE_REFERRER_REWARD_DISTRIBUTE
+
+	// Bond too low.
+	TransferTypeAMMSubAccountLow TransferType = proto.TransferType_TRANSFER_TYPE_BOND_LOW
+	// Bond too high.
+	TransferTypeAMMSubAcountHigh TransferType = proto.TransferType_TRANSFER_TYPE_BOND_HIGH
 )
