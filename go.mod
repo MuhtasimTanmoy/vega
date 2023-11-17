@@ -376,4 +376,5 @@ replace (
 	github.com/shopspring/decimal => github.com/vegaprotocol/decimal v1.3.1-uint256
 	github.com/ipfs/kubo => /Users/wwestgarth/work/kubo
 	github.com/ipfs/boxo => /Users/wwestgarth/work/boxo
+	github.com/libp2p/go-libp2p => /Users/wwestgarth/work/go-libp2p
 )	

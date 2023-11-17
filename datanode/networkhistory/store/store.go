@@ -194,6 +194,21 @@ func New(ctx context.Context, log *logging.Logger, chainID string, cfg Config, n
 	fmt.Println("HEELO", p.ipfsNode.DAG)
 	p.ipfsAPI, err = coreapi.NewCoreAPI(p.ipfsNode)
 
+	adds, err := p.ipfsAPI.Swarm().KnownAddrs(ctx)
+	if err == nil {
+		for _, add := range adds {
+			for _, a := range add {
+				p.ipfsAPI.Swarm().Disconnect(ctx, a)
+			}
+		}
+		bb, _ := ipfsCfg.BootstrapPeers()
+		for _, b := range bb {
+			p.ipfsAPI.Swarm().Connect(ctx, b)
+
+		}
+
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to create ipfs api:%w", err)
 	}
