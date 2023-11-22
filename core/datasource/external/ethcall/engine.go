@@ -207,6 +207,7 @@ func (e *Engine) OnSpecActivated(ctx context.Context, spec datasource.Spec) erro
 	defer e.mu.Unlock()
 	switch d := spec.Data.Content().(type) {
 	case common.Spec:
+		fmt.Println("Activating spec", spec.ID)
 		id := spec.ID
 		if _, ok := e.calls[id]; ok {
 			return fmt.Errorf("duplicate spec: %s", id)
@@ -228,6 +229,7 @@ func (e *Engine) OnSpecDeactivated(ctx context.Context, spec datasource.Spec) {
 	defer e.mu.Unlock()
 	switch spec.Data.Content().(type) {
 	case common.Spec:
+		fmt.Println("Deactivating spec", spec.ID)
 		id := spec.ID
 		delete(e.calls, id)
 	}
@@ -265,6 +267,7 @@ func (e *Engine) Poll(ctx context.Context, wallTime time.Time) {
 		}
 
 		for specID, call := range e.getCalls() {
+			fmt.Println("checking spec:", specID)
 			if call.triggered(prevEthBlock, nextEthBlock) {
 				res, err := call.Call(ctx, e.client, nextEthBlock.NumberU64())
 				if err != nil {
