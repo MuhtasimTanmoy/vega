@@ -16,6 +16,7 @@
 package fee
 
 import (
+	"fmt"
 	"sort"
 
 	"code.vegaprotocol.io/vega/libs/num"
@@ -55,6 +56,7 @@ func NewFeesStats() *FeesStats {
 }
 
 func NewFeesStatsFromProto(fsp *eventspb.FeesStats) *FeesStats {
+	fmt.Println("WWW FROM PROTO")
 	fs := NewFeesStats()
 
 	for _, v := range fsp.RefereesDiscountApplied {
@@ -104,6 +106,7 @@ func NewFeesStatsFromProto(fsp *eventspb.FeesStats) *FeesStats {
 }
 
 func (f *FeesStats) RegisterMakerFee(makerID, takerID string, amount *num.Uint) {
+	fmt.Println("WWW REGISTER MAKER", makerID, takerID, amount.String(), "len", len(f.TradingFeesGenerated))
 	total, ok := f.TotalMakerFeesReceived[makerID]
 	if !ok {
 		total = num.NewUint(0)
@@ -128,6 +131,7 @@ func (f *FeesStats) RegisterMakerFee(makerID, takerID string, amount *num.Uint) 
 }
 
 func (f *FeesStats) RegisterTradingFees(makerID, takerID string, amount *num.Uint) {
+	fmt.Println("WWW REGISTER", makerID, takerID, amount.String(), "len", len(f.TradingFeesGenerated))
 	tradingFeesGenerated, ok := f.TradingFeesGenerated[takerID]
 	if !ok {
 		tradingFeesGenerated = map[string]*num.Uint{}
@@ -140,7 +144,11 @@ func (f *FeesStats) RegisterTradingFees(makerID, takerID string, amount *num.Uin
 		tradingFeesGenerated[makerID] = makerTally
 	}
 
+	fmt.Println("add to maker tally", amount.String(), "tally", makerTally.String())
 	makerTally.Add(makerTally, amount)
+	tradingFeesGenerated, ok = f.TradingFeesGenerated[takerID]
+	fmt.Println("gen fees", len(f.TradingFeesGenerated))
+	fmt.Println("NOW", tradingFeesGenerated[makerID].String())
 }
 
 func (f *FeesStats) RegisterReferrerReward(
@@ -193,8 +201,9 @@ func (f *FeesStats) RegisterVolumeDiscount(party string, amount *num.Uint) {
 // TotalTradingFeesPerParty returns per party sum of all paid and received trading fees.
 func (f *FeesStats) TotalTradingFeesPerParty() map[string]*num.Uint {
 	generatedFeesPerParty := make(map[string]*num.Uint, len(f.TradingFeesGenerated))
-
+	fmt.Println("WWW COLLECTING", len(f.TradingFeesGenerated))
 	for payer, makers := range f.TradingFeesGenerated {
+		fmt.Println("WWW COLLECTING", payer, makers)
 		if _, ok := generatedFeesPerParty[payer]; !ok {
 			generatedFeesPerParty[payer] = num.UintZero()
 		}

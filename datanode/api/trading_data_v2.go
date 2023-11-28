@@ -4807,6 +4807,7 @@ func (t *TradingDataServiceV2) EstimateTransferFee(ctx context.Context, req *v2.
 	if err != nil {
 		return nil, formatE(ErrAssetServiceGetByID, err)
 	}
+	fmt.Println("ASSET QUANTUM", asset.Quantum.String())
 
 	amount := num.MustUintFromString(req.Amount, 10)
 

@@ -150,6 +150,7 @@ func (e *Engine) processTransfer(
 
 	// ensure the party have enough funds for both the
 	// amount and the fee for the transfer
+	fmt.Println("ASSET QUANTUM", assetType.Details.Quantum.String())
 	feeTransfer, discount, err := e.makeFeeTransferForFundsTransfer(ctx, assetType, amount, from, fromAcc, to)
 	if err != nil {
 		return nil, fmt.Errorf("could not pay the fee for transfer: %w", err)
@@ -249,7 +250,7 @@ func (e *Engine) makeFeeTransferForFundsTransfer(
 ) (*types.Transfer, *num.Uint, error) {
 	theoreticalFee := e.calculateFeeTransferForTransfer(asset, amount, from, fromAccountType, to)
 	feeAmount, discountAmount := e.ApplyFeeDiscount(ctx, asset.ID, from, theoreticalFee)
-
+	fmt.Println("fee", feeAmount.String(), discountAmount.String())
 	if err := e.ensureEnoughFundsForTransfer(asset, amount, from, fromAccountType, feeAmount); err != nil {
 		return nil, nil, err
 	}

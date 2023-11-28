@@ -96,10 +96,11 @@ func (e *Engine) oneOffTransfer(
 		transfer.ToAccountType, transfer.Amount, transfer.Reference, transfer.ID, e.currentEpoch, transfer,
 	)
 	if err != nil {
+		fmt.Println("transfer rejected", err)
 		transfer.Status = types.TransferStatusRejected
 		return err
 	}
-
+	fmt.Println("transfer procesed")
 	// all was OK
 	transfer.Status = types.TransferStatusDone
 	e.broker.Send(events.NewLedgerMovements(ctx, tresps))

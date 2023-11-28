@@ -17,6 +17,7 @@ package banking
 
 import (
 	"context"
+	"fmt"
 	"sort"
 
 	"code.vegaprotocol.io/vega/core/events"
@@ -48,11 +49,12 @@ func (e *Engine) RegisterTradingFees(ctx context.Context, assetID string, feesPe
 
 	feesPerPartyKeys := maps.Keys(feesPerParty)
 	sort.Strings(feesPerPartyKeys)
-
+	fmt.Println("WWW REGISTER FEES", assetID, len(feesPerParty))
 	updatedKeys := map[partyAssetKey]struct{}{}
 	for _, party := range feesPerPartyKeys {
-		fee := feesPerParty[party]
 
+		fee := feesPerParty[party]
+		fmt.Println("WWW register trading fee", assetID, party, fee)
 		key := e.feeDiscountKey(assetID, party)
 		updatedKeys[key] = struct{}{}
 
@@ -151,10 +153,10 @@ func (e *Engine) AvailableFeeDiscount(asset string, party string) *num.Uint {
 // decayFeeDiscountAmount update current discount with: discount x e.feeDiscountDecayFraction
 // or 0 if discount is less than e.feeDiscountMinimumTrackedAmount x quantum (where quantum is the asset quantum).
 func (e *Engine) decayFeeDiscountAmount(currentDiscount *num.Uint, assetQuantum num.Decimal) *num.Uint {
+	fmt.Println("WWW DECAY", e.feeDiscountDecayFraction.String(), "cur discount", currentDiscount.String())
 	if currentDiscount.IsZero() {
 		return currentDiscount
 	}
-
 	decayedAmount := currentDiscount.ToDecimal().Mul(e.feeDiscountDecayFraction)
 
 	if decayedAmount.LessThan(e.feeDiscountMinimumTrackedAmount.Mul(assetQuantum)) {

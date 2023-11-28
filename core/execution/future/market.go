@@ -362,11 +362,16 @@ func (m *Market) OnEpochEvent(ctx context.Context, epoch types.Epoch) {
 			m.liquidity.OnEpochEnd(ctx, m.timeService.GetTimeNow(), epoch)
 		}
 		assetQuantum, _ := m.collateral.GetAssetQuantum(m.settlementAsset)
+
+		// the below call to GetFeesStatsOnEpochEnd resets the fee stats counter, so we have to call this first
+		fmt.Println("WWW EPOCH ENDED", epoch.Seq)
+		totalTradingFees := m.fee.TotalTradingFeesPerParty()
+
 		feesStats := m.fee.GetFeesStatsOnEpochEnd(assetQuantum)
 		feesStats.Market = m.GetID()
 		feesStats.EpochSeq = epoch.Seq
 
-		m.banking.RegisterTradingFees(ctx, feesStats.Asset, m.fee.TotalTradingFeesPerParty())
+		m.banking.RegisterTradingFees(ctx, feesStats.Asset, totalTradingFees)
 		m.broker.Send(events.NewFeesStatsEvent(ctx, feesStats))
 	}
 
