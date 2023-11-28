@@ -153,7 +153,6 @@ func (e *Engine) AvailableFeeDiscount(asset string, party string) *num.Uint {
 // decayFeeDiscountAmount update current discount with: discount x e.feeDiscountDecayFraction
 // or 0 if discount is less than e.feeDiscountMinimumTrackedAmount x quantum (where quantum is the asset quantum).
 func (e *Engine) decayFeeDiscountAmount(currentDiscount *num.Uint, assetQuantum num.Decimal) *num.Uint {
-	fmt.Println("WWW DECAY", e.feeDiscountDecayFraction.String(), "cur discount", currentDiscount.String())
 	if currentDiscount.IsZero() {
 		return currentDiscount
 	}

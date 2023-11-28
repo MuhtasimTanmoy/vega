@@ -16,8 +16,6 @@
 package banking
 
 import (
-	"fmt"
-
 	"code.vegaprotocol.io/vega/core/types"
 	"code.vegaprotocol.io/vega/libs/num"
 )
@@ -52,9 +50,6 @@ func calculateFeeForTransfer(
 	if fromAccountType == types.AccountTypeVestedRewards && from == to {
 		return feeAmount
 	}
-
-	fmt.Println("FEE FACTOR", transferFeeFactor.String(), amount.String())
-	fmt.Println("MIN", maxQuantumAmount.String(), "*", assetQuantum.String())
 
 	// now we calculate the fee
 	// min(transfer amount * transfer.fee.factor, transfer.fee.maxQuantumAmount * quantum)

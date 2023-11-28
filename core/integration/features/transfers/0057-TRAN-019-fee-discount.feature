@@ -1,5 +1,7 @@
-Feature: Test one off transfers
+Feature: Transfer fee discounts
 
+
+# this sets up party f0b40ebdc5b92cf2cf82ff5d0c3f94085d23d5ec2d37d0b929e177c6d4d37e4c with a tranfer discount of 324
 Background:
     Given time is updated to "2021-08-26T00:00:00Z"
 
@@ -68,11 +70,6 @@ Background:
       | buyer   | price | size | seller  | aggressor side |
       | f0b40ebdc5b92cf2cf82ff5d0c3f94085d23d5ec2d37d0b929e177c6d4d37e4c | 1002  | 300  | trader4 | sell           |
 
-    # trade_value_for_fee_purposes = size_of_trade * price_of_trade = 3 *1002 = 3006
-    # infrastructure_fee = fee_factor[infrastructure] * trade_value_for_fee_purposes = 0.002 * 3006 = 6.012 = 7 (rounded up to nearest whole value)
-    # maker_fee =  fee_factor[maker]  * trade_value_for_fee_purposes = 0.005 * 3006 = 15.030 = 16 (rounded up to nearest whole value)
-    # liquidity_fee = fee_factor[liquidity] * trade_value_for_fee_purposes = 0 * 3006 = 0
-
     And the following transfers should happen:
       | from    | to      | from account            | to account                       | market id | amount | asset |
       | trader4 | market  | ACCOUNT_TYPE_GENERAL    | ACCOUNT_TYPE_FEES_MAKER          | ETH/DEC21 | 16     | ETH   |
@@ -93,13 +90,19 @@ Background:
     When the network moves ahead "10" blocks
     And the current epoch is "3"
 
-@thingg
+
+@thing
 Scenario: simple successful transfers when (transfer amount * transfer.fee.factor <= transfer.fee.maxQuantumAmount * quantum) (0057-TRAN-001, 0057-TRAN-007, 0057-TRAN-008)
 
 
     Given the following network parameters are set:
       | name                                    | value |
       | transfer.fee.factor                     |  0.5  |
+
+    And the parties have the following transfer fee discounts:
+    | party                                                              | asset | available discount |
+    | f0b40ebdc5b92cf2cf82ff5d0c3f94085d23d5ec2d37d0b929e177c6d4d37e4c   |  ETH  | 324                |
+
 
     # This party has a fee discount of 324 and 9998686 in their general account
     Given "f0b40ebdc5b92cf2cf82ff5d0c3f94085d23d5ec2d37d0b929e177c6d4d37e4c" should have general account balance of "9998686" for asset "ETH"

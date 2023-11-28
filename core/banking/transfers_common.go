@@ -250,7 +250,6 @@ func (e *Engine) makeFeeTransferForFundsTransfer(
 ) (*types.Transfer, *num.Uint, error) {
 	theoreticalFee := e.calculateFeeTransferForTransfer(asset, amount, from, fromAccountType, to)
 	feeAmount, discountAmount := e.ApplyFeeDiscount(ctx, asset.ID, from, theoreticalFee)
-	fmt.Println("fee", feeAmount.String(), discountAmount.String())
 	if err := e.ensureEnoughFundsForTransfer(asset, amount, from, fromAccountType, feeAmount); err != nil {
 		return nil, nil, err
 	}
