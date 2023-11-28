@@ -37,10 +37,10 @@ func PartiesAvailableFeeDiscounts(
 	errs := []error{}
 	for _, r := range parseTransferFeeDiscountTable(table) {
 
-		asset := ""
-		party := ""
+		asset := r.MustStr("asset")
+		party := r.MustStr("party")
 		actual := engine.AvailableFeeDiscount(asset, party)
-		expected := ""
+		expected := r.MustStr("available discount")
 		if expected != actual.String() {
 			errs = append(errs, errors.New(r.MustStr("party")+" expected "+expected+" but got "+actual.String()))
 		}
