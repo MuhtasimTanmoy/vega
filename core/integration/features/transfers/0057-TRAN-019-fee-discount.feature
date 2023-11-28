@@ -90,6 +90,10 @@ Background:
     When the network moves ahead "10" blocks
     And the current epoch is "3"
 
+    And the parties have the following transfer fee discounts:
+    | party                                                              | asset | available discount |
+    | f0b40ebdc5b92cf2cf82ff5d0c3f94085d23d5ec2d37d0b929e177c6d4d37e4c   |  ETH  | 324                |
+
 
 @thing
 Scenario: simple successful transfers when (transfer amount * transfer.fee.factor <= transfer.fee.maxQuantumAmount * quantum) (0057-TRAN-001, 0057-TRAN-007, 0057-TRAN-008)

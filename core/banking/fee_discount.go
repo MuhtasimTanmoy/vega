@@ -142,8 +142,9 @@ func (e *Engine) EstimateFeeDiscount(asset string, party string, fee *num.Uint) 
 
 func (e *Engine) AvailableFeeDiscount(asset string, party string) *num.Uint {
 	key := e.feeDiscountKey(asset, party)
-
+	fmt.Println("discount for", party, asset)
 	if discount, ok := e.feeDiscountPerPartyAndAsset[key]; ok {
+		fmt.Println("discount for", party, asset, discount.String())
 		return discount.Clone()
 	}
 
