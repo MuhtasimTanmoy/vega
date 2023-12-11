@@ -446,6 +446,7 @@ type ExecMarket struct {
 	ExpiringStopOrders         []*Order
 	Product                    *snapshot.Product
 	FeesStats                  *eventspb.FeesStats
+	Amm                        *snapshot.AmmState
 }
 
 type ExecSpotMarket struct {
@@ -3651,6 +3652,7 @@ func ExecMarketFromProto(em *snapshot.Market) *ExecMarket {
 		StopOrders:                 em.StopOrders,
 		Product:                    em.Product,
 		FeesStats:                  em.FeesStats,
+		Amm:                        em.Amm,
 	}
 
 	for _, o := range em.ExpiringOrders {
@@ -3690,6 +3692,7 @@ func (e ExecMarket) IntoProto() *snapshot.Market {
 		StopOrders:                 e.StopOrders,
 		Product:                    e.Product,
 		FeesStats:                  e.FeesStats,
+		Amm:                        e.Amm,
 	}
 
 	if e.CurrentMarkPrice != nil {
