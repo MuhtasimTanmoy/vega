@@ -195,3 +195,10 @@ func TestDeltaI(t *testing.T) {
 	r2 := num.UintZero().DeltaI(n2.Clone(), n1.Clone())
 	assert.Equal(t, "15", r2.String())
 }
+
+func TestSqrt(t *testing.T) {
+	n := num.NewUint(123456789)
+
+	n.Sqrt(n)
+	assert.Equal(t, "11111", n.String())
+}
