@@ -246,11 +246,11 @@ func (t Tx) GetCmd() interface{} {
 	case *commandspb.InputData_JoinTeam:
 		return cmd.JoinTeam
 	case *commandspb.InputData_SubmitAmm:
-		return txn.SubmitAMMCommand
+		return cmd.SubmitAmm
 	case *commandspb.InputData_AmendAmm:
-		return txn.AmendAMMCommand
+		return cmd.AmendAmm
 	case *commandspb.InputData_CancelAmm:
-		return txn.CancelAMMCommand
+		return cmd.CancelAmm
 	default:
 		return fmt.Errorf("command %T is not supported", cmd)
 	}
