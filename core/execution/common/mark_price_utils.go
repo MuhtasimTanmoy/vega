@@ -169,7 +169,11 @@ func CalculateTimeWeightedAverageBookPrice(timeToPrice map[int64]*num.Uint, t in
 		}
 		var timeWeight num.Decimal
 		if totalDuration.IsZero() {
-			timeWeight = num.DecimalZero()
+			if len(keys) == 1 {
+				timeWeight = num.DecimalOne()
+			} else {
+				timeWeight = num.DecimalZero()
+			}
 		} else {
 			timeWeight = num.DecimalFromInt64(duration).Div(totalDuration)
 		}
