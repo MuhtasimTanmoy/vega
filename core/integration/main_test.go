@@ -471,6 +471,9 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^the transfers of following types should NOT happen:$`, func(table *godog.Table) error {
 		return steps.TheTransfersOfFollowingTypesShouldNotHappen(execsetup.broker, table)
 	})
+	s.Step(`^the transfers of following types should happen:$`, func(table *godog.Table) error {
+		return steps.TheTransfersOfFollowingTypesShouldHappen(execsetup.broker, table)
+	})
 	s.Step(`^the following transfers should happen:$`, func(table *godog.Table) error {
 		return steps.TheFollowingTransfersShouldHappen(execsetup.broker, table)
 	})

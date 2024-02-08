@@ -40,12 +40,34 @@ func TheTransfersOfFollowingTypesShouldNotHappen(
 	return nil
 }
 
+func TheTransfersOfFollowingTypesShouldHappen(
+	broker *stubs.BrokerStub,
+	table *godog.Table,
+) error {
+	transfers := broker.GetTransfers(true)
+
+	for _, r := range parseNotTransferTable(table) {
+		row := transferNotRow{row: r}
+		if !matchTransferType(transfers, row) {
+			return errTransferNotFound(row)
+		}
+	}
+
+	return nil
+}
+
 type transferNotRow struct {
 	row RowWrapper
 }
 
 func errTransferFound(row transferNotRow) error {
 	return fmt.Errorf("transfer of type '%s' found",
+		row.Type(),
+	)
+}
+
+func errTransferNotFound(row transferNotRow) error {
+	return fmt.Errorf("transfer of type '%s' not found",
 		row.Type(),
 	)
 }
