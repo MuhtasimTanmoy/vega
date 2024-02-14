@@ -32,6 +32,7 @@
 ### 🛠 Improvements
 
 - [10647](https://github.com/vegaprotocol/vega/issues/10647) - Add filter by game ID to transfers API.
+- [10557](https://github.com/vegaprotocol/vega/issues/10557) - Add AMM pool events API.
 
 ### 🐛 Fixes
 

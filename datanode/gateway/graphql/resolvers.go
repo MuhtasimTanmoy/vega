@@ -661,6 +661,10 @@ func (r *VegaResolverRoot) PerpetualData() PerpetualDataResolver {
 	return (*perpetualDataResolver)(r)
 }
 
+func (r *VegaResolverRoot) AMMPool() AMMPoolResolver {
+	return (*ammPoolResolver)(r)
+}
+
 type protocolUpgradeProposalResolver VegaResolverRoot
 
 func (r *protocolUpgradeProposalResolver) UpgradeBlockHeight(_ context.Context, obj *eventspb.ProtocolUpgradeEvent) (string, error) {
@@ -767,6 +771,25 @@ func (r *myDepositResolver) CreditedTimestamp(_ context.Context, obj *vegapb.Dep
 // BEGIN: Query Resolver
 
 type myQueryResolver VegaResolverRoot
+
+func (r *myQueryResolver) AmmPools(ctx context.Context, partyID *string, marketID *string, poolID *string, subAccount *string,
+	pagination *v2.Pagination) (
+	*v2.AMMPoolsConnection, error,
+) {
+	req := &v2.ListAMMPoolsRequest{
+		PartyId:    partyID,
+		MarketId:   marketID,
+		PoolId:     poolID,
+		SubAccount: subAccount,
+		Pagination: pagination,
+	}
+
+	res, err := r.tradingDataClientV2.ListAMMPools(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return res.AmmPools, nil
+}
 
 func (r *myQueryResolver) PartiesProfilesConnection(ctx context.Context, ids []string, pagination *v2.Pagination) (*v2.PartiesProfilesConnection, error) {
 	req := v2.ListPartiesProfilesRequest{

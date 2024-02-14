@@ -130,6 +130,7 @@ type TradingDataServiceV2 struct {
 	transactionResults            *service.TransactionResults
 	gamesService                  *service.Games
 	marginModesService            *service.MarginModes
+	ammPoolService                *service.AMMPools
 }
 
 func (t *TradingDataServiceV2) GetPartyVestingStats(
@@ -5147,6 +5148,46 @@ func (t *TradingDataServiceV2) ListPartyMarginModes(ctx context.Context, req *v2
 
 	return &v2.ListPartyMarginModesResponse{
 		PartyMarginModes: &v2.PartyMarginModesConnection{
+			Edges:    edges,
+			PageInfo: pageInfo.ToProto(),
+		},
+	}, nil
+}
+
+func (t *TradingDataServiceV2) ListAMMPools(ctx context.Context, req *v2.ListAMMPoolsRequest) (*v2.ListAMMPoolsResponse, error) {
+	defer metrics.StartAPIRequestAndTimeGRPC("ListAMMPools")()
+
+	pagination, err := entities.CursorPaginationFromProto(req.Pagination)
+	if err != nil {
+		return nil, formatE(ErrInvalidPagination, err)
+	}
+
+	var (
+		pools    []entities.AMMPool
+		pageInfo entities.PageInfo
+	)
+
+	if req.PartyId != nil {
+		pools, pageInfo, err = t.ammPoolService.ListByParty(ctx, entities.PartyID(*req.PartyId), pagination)
+	} else if req.MarketId != nil {
+		pools, pageInfo, err = t.ammPoolService.ListByMarket(ctx, entities.MarketID(*req.MarketId), pagination)
+	} else if req.PoolId != nil {
+		pools, pageInfo, err = t.ammPoolService.ListByPool(ctx, entities.AMMPoolID(*req.PoolId), req.SubAccount, pagination)
+	} else {
+		pools, pageInfo, err = t.ammPoolService.ListAll(ctx, pagination)
+	}
+
+	if err != nil {
+		return nil, formatE(ErrListAMMPools, err)
+	}
+
+	edges, err := makeEdges[*v2.AMMPoolEdge](pools)
+	if err != nil {
+		return nil, formatE(err)
+	}
+
+	return &v2.ListAMMPoolsResponse{
+		AmmPools: &v2.AMMPoolsConnection{
 			Edges:    edges,
 			PageInfo: pageInfo.ToProto(),
 		},
