@@ -272,10 +272,15 @@ func (b *OrderBook) RollbackConfirmation(conf *types.OrderConfirmation, orders [
 		o.Remaining += trade.Size
 
 		if o.Status == types.OrderStatusFilled {
-			// if it has been filled it will have been taken off, now add it on
-			o.Status = types.OrderStatusActive
 			b.add(o)
 		}
+
+		// if it has been filled it will have been taken off, now add it on
+		o.Status = types.OrderStatusActive
+		if o.Remaining != o.Size {
+			o.Status = types.OrderStatusPartiallyFilled
+		}
+
 		b.getSide(o.Side).replaceOrder(o) // replace will replace, or append if the order was removed somehow
 	}
 	return nil
