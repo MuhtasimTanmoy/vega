@@ -24,6 +24,7 @@ import (
 type EventForwarderEngine interface {
 	ReloadConf(evtforward.Config)
 	SetupEthereumEngine(evtfwdeth.Client, evtfwdeth.Forwarder, evtfwdeth.Config, *types.EthereumConfig, evtfwdeth.Assets) error
+	SetupSecondaryEthereumEngine(evtfwdeth.Client, evtfwdeth.Forwarder, evtfwdeth.Config, *types.ArbitrumConfig, evtfwdeth.Assets) error
 	Start()
 	Stop()
 

@@ -20,21 +20,25 @@ import (
 	"fmt"
 
 	"code.vegaprotocol.io/vega/core/broker"
+	"code.vegaprotocol.io/vega/core/client/eth"
 	"code.vegaprotocol.io/vega/core/netparams"
 	"code.vegaprotocol.io/vega/core/types"
 	"code.vegaprotocol.io/vega/logging"
 )
 
-func NewERC20MultisigTopology(
-	config Config,
+func NewERC20MultisigTopology(config Config,
 	log *logging.Logger,
 	witness Witness,
 	broker broker.Interface,
-	ethClient EthereumClient,
-	ethConfirmation EthConfirmations,
+	primaryEthClient EthereumClient,
+	primaryEthConfirmation EthConfirmations,
+	secondaryEthClient *eth.SecondaryClient,
+	secondaryEthConfirmation *eth.EthereumConfirmations,
 	netp *netparams.Store,
 ) *Topology {
-	ocv := NewOnChainVerifier(config, log, ethClient, ethConfirmation)
+	// TODO What to do with the secondary clients and all?
+
+	ocv := NewOnChainVerifier(config, log, primaryEthClient, primaryEthConfirmation)
 	_ = netp.Watch(netparams.WatchParam{
 		Param: netparams.BlockchainsEthereumConfig,
 		Watcher: func(_ context.Context, cfg interface{}) error {

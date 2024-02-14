@@ -143,10 +143,13 @@ type Engine struct {
 	top            Topology
 	ethEventSource EthereumEventSource
 
-	// ethChainID stores the Ethereum Mainnet chain ID. It is used during the
+	// primaryEthChainID stores the Ethereum Mainnet chain ID. It is used during the
 	// chain event deduplication phase, to ensure we correctly deduplicate
 	// chain events that have been seen before the introduce of the second bridge.
-	ethChainID string
+	primaryEthChainID string
+
+	secondaryEthChainID string
+
 	// assetActions tracks all the asset actions the engine must process on network
 	// tick.
 	assetActions map[string]*assetAction
@@ -188,8 +191,9 @@ type Engine struct {
 	// transfer id to recurringTransfers
 	recurringTransfersMap map[string]*types.RecurringTransfer
 
-	bridgeState *bridgeState
-	bridgeView  ERC20BridgeView
+	bridgeState         *bridgeState
+	primaryBridgeView   ERC20BridgeView
+	secondaryBridgeView ERC20BridgeView
 
 	minWithdrawQuantumMultiple num.Decimal
 
@@ -202,8 +206,7 @@ type withdrawalRef struct {
 	ref *big.Int
 }
 
-func New(
-	log *logging.Logger,
+func New(log *logging.Logger,
 	cfg Config,
 	col Collateral,
 	witness Witness,
@@ -213,7 +216,8 @@ func New(
 	broker broker.Interface,
 	top Topology,
 	marketActivityTracker MarketActivityTracker,
-	bridgeView ERC20BridgeView,
+	primaryBridgeView ERC20BridgeView,
+	secondaryBridgeView ERC20BridgeView,
 	ethEventSource EthereumEventSource,
 ) (e *Engine) {
 	log = log.Named(namedLogger)
@@ -252,7 +256,8 @@ func New(
 		},
 		feeDiscountPerPartyAndAsset:               map[partyAssetKey]*num.Uint{},
 		pendingPerAssetAndPartyFeeDiscountUpdates: map[string]map[string]*num.Uint{},
-		bridgeView: bridgeView,
+		primaryBridgeView:                         primaryBridgeView,
+		secondaryBridgeView:                       secondaryBridgeView,
 	}
 }
 
@@ -271,8 +276,12 @@ func (e *Engine) OnMinWithdrawQuantumMultiple(ctx context.Context, f num.Decimal
 	return nil
 }
 
-func (e *Engine) OnEthereumChainIDUpdated(ethChainID string) {
-	e.ethChainID = ethChainID
+func (e *Engine) OnPrimaryEthChainIDUpdated(ethChainID string) {
+	e.primaryEthChainID = ethChainID
+}
+
+func (e *Engine) OnSecondaryEthChainIDUpdated(ethChainID string) {
+	e.secondaryEthChainID = ethChainID
 }
 
 // ReloadConf updates the internal configuration.
@@ -569,6 +578,17 @@ func (e *Engine) sendTeamsStats(ctx context.Context, seq uint64) {
 
 	if len(teamsStats) > 0 {
 		e.broker.Send(events.NewTeamsStatsUpdatedEvent(ctx, seq, teamsStats))
+	}
+}
+
+func (e *Engine) bridgeViewForChainID(chainID string) ERC20BridgeView {
+	switch chainID {
+	case e.primaryEthChainID:
+		return e.primaryBridgeView
+	case e.secondaryEthChainID:
+		return e.secondaryBridgeView
+	default:
+		return nil
 	}
 }
 

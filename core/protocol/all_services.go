@@ -128,29 +128,35 @@ type allServices struct {
 
 	partiesEngine *parties.SnapshottedEngine
 
-	assets                *assets.Service
-	topology              *validators.Topology
-	notary                *notary.SnapshotNotary
-	eventForwarder        *evtforward.Forwarder
-	eventForwarderEngine  EventForwarderEngine
-	ethCallEngine         EthCallEngine
-	witness               *validators.Witness
-	banking               *banking.Engine
-	genesisHandler        *genesis.Handler
-	protocolUpgradeEngine *protocolupgrade.Engine
+	assets                  *assets.Service
+	topology                *validators.Topology
+	notary                  *notary.SnapshotNotary
+	primaryEventForwarder   *evtforward.Forwarder
+	secondaryEventForwarder *evtforward.Forwarder
+	eventForwarderEngine    EventForwarderEngine
+	ethCallEngine           EthCallEngine
+	witness                 *validators.Witness
+	banking                 *banking.Engine
+	genesisHandler          *genesis.Handler
+	protocolUpgradeEngine   *protocolupgrade.Engine
 
 	teamsEngine     *teams.SnapshottedEngine
 	referralProgram *referral.SnapshottedEngine
 
+	primaryEthClient        *ethclient.PrimaryClient
+	primaryEthConfirmations *ethclient.EthereumConfirmations
+
+	secondaryEthConfirmations *ethclient.EthereumConfirmations
+	secondaryEthClient        *ethclient.SecondaryClient
+
 	// staking
-	ethClient             *ethclient.Client
-	ethConfirmations      *ethclient.EthereumConfirmations
 	stakingAccounts       *staking.Accounting
 	stakeVerifier         *staking.StakeVerifier
 	stakeCheckpoint       *staking.Checkpoint
 	erc20MultiSigTopology *erc20multisig.Topology
 
-	erc20BridgeView *bridges.ERC20LogicView
+	primaryBridgeView   *bridges.ERC20LogicView
+	secondaryBridgeView *bridges.ERC20LogicView
 
 	commander  *nodewallets.Commander
 	gastimator *processor.Gastimator
@@ -170,27 +176,29 @@ func newServices(
 	ctx context.Context,
 	log *logging.Logger,
 	conf *config.Watcher,
-	// this is a parameter as not reloaded as part of the protocol
 	nodeWallets *nodewallets.NodeWallets,
-	ethClient *ethclient.Client,
-	ethConfirmations *ethclient.EthereumConfirmations,
+	primaryEthClient *ethclient.PrimaryClient,
+	secondaryEthClient *ethclient.SecondaryClient,
+	primaryEthConfirmations *ethclient.EthereumConfirmations,
+	secondaryEthConfirmations *ethclient.EthereumConfirmations,
 	blockchainClient *blockchain.Client,
 	vegaPaths paths.Paths,
 	stats *stats.Stats,
-
 	l2Clients *ethclient.L2Clients,
 ) (_ *allServices, err error) {
 	svcs := &allServices{
-		ctx:              ctx,
-		log:              log,
-		confWatcher:      conf,
-		conf:             conf.Get(),
-		ethClient:        ethClient,
-		l2Clients:        l2Clients,
-		ethConfirmations: ethConfirmations,
-		blockchainClient: blockchainClient,
-		stats:            stats,
-		vegaPaths:        vegaPaths,
+		ctx:                       ctx,
+		log:                       log,
+		confWatcher:               conf,
+		conf:                      conf.Get(),
+		primaryEthClient:          primaryEthClient,
+		secondaryEthClient:        secondaryEthClient,
+		l2Clients:                 l2Clients,
+		primaryEthConfirmations:   primaryEthConfirmations,
+		secondaryEthConfirmations: secondaryEthConfirmations,
+		blockchainClient:          blockchainClient,
+		stats:                     stats,
+		vegaPaths:                 vegaPaths,
 	}
 
 	svcs.broker, err = broker.New(svcs.ctx, svcs.log, svcs.conf.Broker, stats.Blockchain)
@@ -199,8 +207,8 @@ func newServices(
 		return nil, err
 	}
 
-	// this will be needed very soon, instantiate straight away
-	svcs.erc20BridgeView = bridges.NewERC20LogicView(ethClient, ethConfirmations)
+	svcs.primaryBridgeView = bridges.NewERC20LogicView(primaryEthClient, primaryEthConfirmations)
+	svcs.secondaryBridgeView = bridges.NewERC20LogicView(secondaryEthClient, secondaryEthConfirmations)
 
 	svcs.timeService = vegatime.New(svcs.conf.Time, svcs.broker)
 	svcs.epochService = epochtime.NewService(svcs.log, svcs.conf.Epoch, svcs.broker)
@@ -226,7 +234,7 @@ func newServices(
 	svcs.netParams = netparams.New(svcs.log, svcs.conf.NetworkParameters, svcs.broker)
 
 	svcs.erc20MultiSigTopology = erc20multisig.NewERC20MultisigTopology(
-		svcs.conf.ERC20MultiSig, svcs.log, nil, svcs.broker, svcs.ethClient, svcs.ethConfirmations, svcs.netParams,
+		svcs.conf.ERC20MultiSig, svcs.log, nil, svcs.broker, svcs.primaryEthClient, svcs.primaryEthConfirmations, svcs.secondaryEthClient, svcs.secondaryEthConfirmations, svcs.netParams,
 	)
 
 	if svcs.conf.IsValidator() {
@@ -240,22 +248,23 @@ func newServices(
 
 	// this is done to go around circular deps...
 	svcs.erc20MultiSigTopology.SetWitness(svcs.witness)
-	svcs.eventForwarder = evtforward.New(svcs.log, svcs.conf.EvtForward, svcs.commander, svcs.timeService, svcs.topology)
+	svcs.primaryEventForwarder = evtforward.New(svcs.log, svcs.conf.PrimaryEvtForward, svcs.commander, svcs.timeService, svcs.topology)
+	svcs.secondaryEventForwarder = evtforward.New(svcs.log, svcs.conf.SecondaryEvtForward, svcs.commander, svcs.timeService, svcs.topology)
 
 	if svcs.conf.HaveEthClient() {
-		svcs.eventForwarderEngine = evtforward.NewEngine(svcs.log, svcs.conf.EvtForward)
+		svcs.eventForwarderEngine = evtforward.NewEngine(svcs.log, svcs.conf.PrimaryEvtForward)
 	} else {
-		svcs.eventForwarderEngine = evtforward.NewNoopEngine(svcs.log, svcs.conf.EvtForward)
+		svcs.eventForwarderEngine = evtforward.NewNoopEngine(svcs.log, svcs.conf.PrimaryEvtForward)
 	}
 
 	svcs.oracle = spec.NewEngine(svcs.log, svcs.conf.Oracles, svcs.timeService, svcs.broker)
 
-	svcs.ethCallEngine = ethcall.NewEngine(svcs.log, svcs.conf.EvtForward.EthCall, svcs.conf.IsValidator(), svcs.ethClient, svcs.eventForwarder)
+	svcs.ethCallEngine = ethcall.NewEngine(svcs.log, svcs.conf.PrimaryEvtForward.EthCall, svcs.conf.IsValidator(), svcs.primaryEthClient, svcs.primaryEventForwarder)
 
-	svcs.l2CallEngines = NewL2EthCallEngines(svcs.log, svcs.conf.EvtForward.EthCall, svcs.conf.IsValidator(), svcs.l2Clients, svcs.eventForwarder, svcs.oracle.AddSpecActivationListener)
+	svcs.l2CallEngines = NewL2EthCallEngines(svcs.log, svcs.conf.PrimaryEvtForward.EthCall, svcs.conf.IsValidator(), svcs.l2Clients, svcs.primaryEventForwarder, svcs.oracle.AddSpecActivationListener)
 
 	svcs.ethereumOraclesVerifier = ethverifier.New(svcs.log, svcs.witness, svcs.timeService, svcs.broker,
-		svcs.oracle, svcs.ethCallEngine, svcs.ethConfirmations)
+		svcs.oracle, svcs.ethCallEngine, svcs.primaryEthConfirmations)
 
 	svcs.l2Verifiers = ethverifier.NewL2Verifiers(svcs.log, svcs.witness, svcs.timeService, svcs.broker,
 		svcs.oracle, svcs.l2Clients, svcs.l2CallEngines, svcs.conf.IsValidator())
@@ -270,7 +279,7 @@ func newServices(
 	svcs.erc20MultiSigTopology.SetEthereumEventSource(svcs.eventForwarderEngine)
 
 	svcs.stakingAccounts, svcs.stakeVerifier, svcs.stakeCheckpoint = staking.New(
-		svcs.log, svcs.conf.Staking, svcs.timeService, svcs.broker, svcs.witness, svcs.ethClient, svcs.netParams, svcs.eventForwarder, svcs.conf.HaveEthClient(), svcs.ethConfirmations, svcs.eventForwarderEngine,
+		svcs.log, svcs.conf.Staking, svcs.timeService, svcs.broker, svcs.witness, svcs.primaryEthClient, svcs.netParams, svcs.primaryEventForwarder, svcs.conf.HaveEthClient(), svcs.primaryEthConfirmations, svcs.eventForwarderEngine,
 	)
 	svcs.epochService.NotifyOnEpoch(svcs.topology.OnEpochEvent, svcs.topology.OnEpochRestore)
 	svcs.epochService.NotifyOnEpoch(stats.OnEpochEvent, stats.OnEpochRestore)
@@ -285,9 +294,9 @@ func newServices(
 	svcs.notary = notary.NewWithSnapshot(svcs.log, svcs.conf.Notary, svcs.topology, svcs.broker, svcs.commander)
 
 	if svcs.conf.IsValidator() {
-		svcs.assets = assets.New(svcs.log, svcs.conf.Assets, nodeWallets.Ethereum, svcs.ethClient, svcs.broker, svcs.erc20BridgeView, svcs.notary, svcs.conf.HaveEthClient())
+		svcs.assets = assets.New(svcs.log, svcs.conf.Assets, nodeWallets.Ethereum, svcs.primaryEthClient, svcs.secondaryEthClient, svcs.broker, svcs.primaryBridgeView, svcs.secondaryBridgeView, svcs.notary, svcs.conf.HaveEthClient())
 	} else {
-		svcs.assets = assets.New(svcs.log, svcs.conf.Assets, nil, svcs.ethClient, svcs.broker, svcs.erc20BridgeView, svcs.notary, svcs.conf.HaveEthClient())
+		svcs.assets = assets.New(svcs.log, svcs.conf.Assets, nil, svcs.primaryEthClient, svcs.secondaryEthClient, svcs.broker, svcs.primaryBridgeView, svcs.secondaryBridgeView, svcs.notary, svcs.conf.HaveEthClient())
 	}
 
 	// TODO(): this is not pretty
@@ -309,7 +318,7 @@ func newServices(
 		svcs.volumeDiscount.OnEpochRestore,
 	)
 
-	svcs.banking = banking.New(svcs.log, svcs.conf.Banking, svcs.collateral, svcs.witness, svcs.timeService, svcs.assets, svcs.notary, svcs.broker, svcs.topology, svcs.marketActivityTracker, svcs.erc20BridgeView, svcs.eventForwarderEngine)
+	svcs.banking = banking.New(svcs.log, svcs.conf.Banking, svcs.collateral, svcs.witness, svcs.timeService, svcs.assets, svcs.notary, svcs.broker, svcs.topology, svcs.marketActivityTracker, svcs.primaryBridgeView, svcs.secondaryBridgeView, svcs.eventForwarderEngine)
 
 	// instantiate the execution engine
 	svcs.executionEngine = execution.NewEngine(
@@ -407,7 +416,7 @@ func newServices(
 	svcs.topology.NotifyOnKeyChange(svcs.governance.ValidatorKeyChanged)
 
 	svcs.snapshotEngine.AddProviders(svcs.checkpoint, svcs.collateral, svcs.governance, svcs.delegation, svcs.netParams, svcs.epochService, svcs.assets, svcs.banking, svcs.witness,
-		svcs.notary, svcs.stakingAccounts, svcs.stakeVerifier, svcs.limits, svcs.topology, svcs.eventForwarder, svcs.executionEngine, svcs.marketActivityTracker, svcs.statevar,
+		svcs.notary, svcs.stakingAccounts, svcs.stakeVerifier, svcs.limits, svcs.topology, svcs.primaryEventForwarder, svcs.secondaryEventForwarder, svcs.executionEngine, svcs.marketActivityTracker, svcs.statevar,
 		svcs.erc20MultiSigTopology, svcs.protocolUpgradeEngine, svcs.ethereumOraclesVerifier, svcs.vesting, svcs.activityStreak, svcs.referralProgram, svcs.volumeDiscount,
 		svcs.teamsEngine, svcs.spam, svcs.l2Verifiers)
 
@@ -470,7 +479,8 @@ func (svcs *allServices) registerTimeServiceCallbacks() {
 		svcs.erc20MultiSigTopology.OnTick,
 		svcs.witness.OnTick,
 
-		svcs.eventForwarder.OnTick,
+		svcs.primaryEventForwarder.OnTick,
+		svcs.secondaryEventForwarder.OnTick,
 		svcs.stakeVerifier.OnTick,
 		svcs.statevar.OnTick,
 		svcs.executionEngine.OnTick,
@@ -496,8 +506,9 @@ func (svcs *allServices) registerConfigWatchers() {
 	svcs.confListenerIDs = svcs.confWatcher.OnConfigUpdateWithID(
 		func(cfg config.Config) { svcs.executionEngine.ReloadConf(cfg.Execution) },
 		func(cfg config.Config) { svcs.notary.ReloadConf(cfg.Notary) },
-		func(cfg config.Config) { svcs.eventForwarderEngine.ReloadConf(cfg.EvtForward) },
-		func(cfg config.Config) { svcs.eventForwarder.ReloadConf(cfg.EvtForward) },
+		func(cfg config.Config) { svcs.eventForwarderEngine.ReloadConf(cfg.PrimaryEvtForward) },
+		func(cfg config.Config) { svcs.primaryEventForwarder.ReloadConf(cfg.PrimaryEvtForward) },
+		func(cfg config.Config) { svcs.secondaryEventForwarder.ReloadConf(cfg.SecondaryEvtForward) },
 		func(cfg config.Config) { svcs.topology.ReloadConf(cfg.Validators) },
 		func(cfg config.Config) { svcs.witness.ReloadConf(cfg.Validators) },
 		func(cfg config.Config) { svcs.assets.ReloadConf(cfg.Assets) },
@@ -508,7 +519,7 @@ func (svcs *allServices) registerConfigWatchers() {
 
 	if svcs.conf.HaveEthClient() {
 		svcs.confListenerIDs = svcs.confWatcher.OnConfigUpdateWithID(
-			func(cfg config.Config) { svcs.l2Clients.ReloadConf(cfg.Ethereum) },
+			func(cfg config.Config) { svcs.l2Clients.ReloadConf(cfg.PrimaryEthereum) },
 		)
 	}
 
@@ -680,11 +691,26 @@ func (svcs *allServices) setupNetParameters(powWatchers []netparams.WatchParam) 
 					return fmt.Errorf("invalid Ethereum configuration: %w", err)
 				}
 
-				if err := svcs.ethClient.UpdateEthereumConfig(ctx, ethCfg); err != nil {
+				if err := svcs.primaryEthClient.UpdateEthereumConfig(ctx, ethCfg); err != nil {
 					return err
 				}
 
-				return svcs.eventForwarderEngine.SetupEthereumEngine(svcs.ethClient, svcs.eventForwarder, svcs.conf.EvtForward.Ethereum, ethCfg, svcs.assets)
+				return svcs.eventForwarderEngine.SetupEthereumEngine(svcs.primaryEthClient, svcs.primaryEventForwarder, svcs.conf.PrimaryEvtForward.Ethereum, ethCfg, svcs.assets)
+			},
+		},
+		{
+			Param: netparams.BlockchainsArbitrumConfig,
+			Watcher: func(ctx context.Context, cfg interface{}) error {
+				ethCfg, err := types.ArbitrumConfigFromUntypedProto(cfg)
+				if err != nil {
+					return fmt.Errorf("invalid Arbitrum configuration: %w", err)
+				}
+
+				if err := svcs.secondaryEthClient.UpdateEthereumConfig(ctx, ethCfg); err != nil {
+					return err
+				}
+
+				return svcs.eventForwarderEngine.SetupSecondaryEthereumEngine(svcs.secondaryEthClient, svcs.secondaryEventForwarder, svcs.conf.SecondaryEvtForward.Ethereum, ethCfg, svcs.assets)
 			},
 		},
 		{
@@ -853,7 +879,7 @@ func (svcs *allServices) setupNetParameters(powWatchers []netparams.WatchParam) 
 					return fmt.Errorf("invalid ethereum configuration: %w", err)
 				}
 
-				svcs.ethConfirmations.UpdateConfirmations(ethCfg.Confirmations())
+				svcs.primaryEthConfirmations.UpdateConfirmations(ethCfg.Confirmations())
 				return nil
 			},
 		},
@@ -884,7 +910,7 @@ func (svcs *allServices) setupNetParameters(powWatchers []netparams.WatchParam) 
 					return fmt.Errorf("invalid ethereum configuration: %w", err)
 				}
 
-				svcs.assets.OnEthereumChainIDUpdated(ethCfg.ChainID())
+				svcs.assets.OnPrimaryEthChainIDUpdated(ethCfg.ChainID())
 				return nil
 			},
 		},
@@ -893,10 +919,34 @@ func (svcs *allServices) setupNetParameters(powWatchers []netparams.WatchParam) 
 			Watcher: func(_ context.Context, cfg interface{}) error {
 				ethCfg, err := types.EthereumConfigFromUntypedProto(cfg)
 				if err != nil {
-					return fmt.Errorf("invalid ethereum configuration: %w", err)
+					return fmt.Errorf("invalid primary ethereum configuration: %w", err)
 				}
 
-				svcs.banking.OnEthereumChainIDUpdated(ethCfg.ChainID())
+				svcs.banking.OnPrimaryEthChainIDUpdated(ethCfg.ChainID())
+				return nil
+			},
+		},
+		{
+			Param: netparams.BlockchainsArbitrumConfig,
+			Watcher: func(_ context.Context, cfg interface{}) error {
+				ethCfg, err := types.ArbitrumConfigFromUntypedProto(cfg)
+				if err != nil {
+					return fmt.Errorf("invalid secondary ethereum configuration: %w", err)
+				}
+
+				svcs.banking.OnSecondaryEthChainIDUpdated(ethCfg.ChainID())
+				return nil
+			},
+		},
+		{
+			Param: netparams.BlockchainsArbitrumConfig,
+			Watcher: func(_ context.Context, cfg interface{}) error {
+				ethCfg, err := types.ArbitrumConfigFromUntypedProto(cfg)
+				if err != nil {
+					return fmt.Errorf("invalid secondary ethereum configuration: %w", err)
+				}
+
+				svcs.assets.OnSecondaryEthChainIDUpdated(ethCfg.ChainID())
 				return nil
 			},
 		},
@@ -913,10 +963,8 @@ func (svcs *allServices) setupNetParameters(powWatchers []netparams.WatchParam) 
 				}
 
 				// non-validators still need to create these engine's for consensus reasons
-				svcs.l2CallEngines.OnEthereumL2ConfigsUpdated(
-					ctx, ethCfg)
-				svcs.l2Verifiers.OnEthereumL2ConfigsUpdated(
-					ctx, ethCfg)
+				svcs.l2CallEngines.OnEthereumL2ConfigsUpdated(ctx, ethCfg)
+				svcs.l2Verifiers.OnEthereumL2ConfigsUpdated(ctx, ethCfg)
 
 				return nil
 			},

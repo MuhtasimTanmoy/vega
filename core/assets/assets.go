@@ -68,24 +68,32 @@ type Service struct {
 	pendingAssetUpdates map[string]*Asset
 
 	ethWallet nweth.EthereumWallet
-	ethClient erc20.ETHClient
-	notary    Notary
-	ass       *assetsSnapshotState
+
+	primaryEthClient   erc20.ETHClient
+	secondaryEthClient erc20.ETHClient
+
+	notary Notary
+	ass    *assetsSnapshotState
 
 	ethToVega   map[string]string
 	isValidator bool
 
-	bridgeView      ERC20BridgeView
-	ethereumChainID string
+	primaryBridgeView   ERC20BridgeView
+	secondaryBridgeView ERC20BridgeView
+
+	primaryEthChainID   string
+	secondaryEthChainID string
 }
 
 func New(
 	log *logging.Logger,
 	cfg Config,
 	nw nweth.EthereumWallet,
-	ethClient erc20.ETHClient,
+	primaryEthClient erc20.ETHClient,
+	secondaryEthClient erc20.ETHClient,
 	broker broker.Interface,
-	bridgeView ERC20BridgeView,
+	primaryBridgeView ERC20BridgeView,
+	secondaryBridgeView ERC20BridgeView,
 	notary Notary,
 	isValidator bool,
 ) *Service {
@@ -100,12 +108,14 @@ func New(
 		pendingAssets:       map[string]*Asset{},
 		pendingAssetUpdates: map[string]*Asset{},
 		ethWallet:           nw,
-		ethClient:           ethClient,
+		primaryEthClient:    primaryEthClient,
+		secondaryEthClient:  secondaryEthClient,
 		notary:              notary,
 		ass:                 &assetsSnapshotState{},
 		isValidator:         isValidator,
 		ethToVega:           map[string]string{},
-		bridgeView:          bridgeView,
+		primaryBridgeView:   primaryBridgeView,
+		secondaryBridgeView: secondaryBridgeView,
 	}
 }
 
@@ -121,6 +131,14 @@ func (s *Service) ReloadConf(cfg Config) {
 	}
 
 	s.cfg = cfg
+}
+
+func (s *Service) OnPrimaryEthChainIDUpdated(chainID string) {
+	s.primaryEthChainID = chainID
+}
+
+func (s *Service) OnSecondaryEthChainIDUpdated(chainID string) {
+	s.secondaryEthChainID = chainID
 }
 
 // Enable move the state of an from pending the list of valid and accepted assets.
@@ -269,7 +287,7 @@ func (s *Service) assetFromDetails(assetID string, assetDetails *types.AssetDeta
 		// TODO(): fix once the ethereum wallet and client are not required
 		// anymore to construct assets
 		if s.isValidator {
-			asset, err = erc20.New(assetID, assetDetails, s.ethWallet, s.ethClient)
+			asset, err = erc20.New(assetID, assetDetails, s.ethWallet, s.ethClientByChainID(assetDetails.GetERC20().ChainID))
 		} else {
 			asset, err = erc20.New(assetID, assetDetails, nil, nil)
 		}
@@ -296,7 +314,7 @@ func (s *Service) buildAssetFromProto(asset *types.Asset) (*Asset, error) {
 			err        error
 		)
 		if s.isValidator {
-			erc20Asset, err = erc20.New(asset.ID, asset.Details, s.ethWallet, s.ethClient)
+			erc20Asset, err = erc20.New(asset.ID, asset.Details, s.ethWallet, s.ethClientByChainID(asset.Details.GetERC20().ChainID))
 		} else {
 			erc20Asset, err = erc20.New(asset.ID, asset.Details, nil, nil)
 		}
@@ -454,7 +472,8 @@ func (s *Service) ValidateAsset(assetID string) error {
 func (s *Service) validateAsset(a *Asset) error {
 	var err error
 	if erc20, ok := a.ERC20(); ok {
-		err = s.bridgeView.FindAsset(erc20.Type().Details.DeepClone())
+		bridgeView := s.bridgeViewByChainID(erc20.Type().Details.GetERC20().ChainID)
+		err = bridgeView.FindAsset(erc20.Type().Details.DeepClone())
 		// no error, our asset exists on chain
 		if err == nil {
 			erc20.SetValid()
@@ -464,6 +483,26 @@ func (s *Service) validateAsset(a *Asset) error {
 	return err
 }
 
-func (s *Service) OnEthereumChainIDUpdated(chainID string) {
-	s.ethereumChainID = chainID
+func (s *Service) ethClientByChainID(chainID string) erc20.ETHClient {
+	switch chainID {
+	case s.primaryEthChainID:
+		return s.primaryEthClient
+	case s.secondaryEthChainID:
+		return s.secondaryEthClient
+	default:
+		panic("No ethereum client registered for chain ID")
+	}
+	return nil
+}
+
+func (s *Service) bridgeViewByChainID(chainID string) ERC20BridgeView {
+	switch chainID {
+	case s.primaryEthChainID:
+		return s.primaryBridgeView
+	case s.secondaryEthChainID:
+		return s.secondaryBridgeView
+	default:
+		panic("No bridge view registered for chain ID")
+	}
+	return nil
 }

@@ -214,7 +214,10 @@ type App struct {
 	banking                Banking
 	broker                 Broker
 	witness                Witness
-	evtfwd                 EvtForwarder
+	primaryEvtForwarder    EvtForwarder
+	primaryChainID         uint64
+	secondaryEvtForwarder  EvtForwarder
+	secondaryChainID       uint64
 	exec                   ExecutionEngine
 	ghandler               *genesis.Handler
 	gov                    GovernanceEngine
@@ -247,12 +250,10 @@ type App struct {
 	nilPow  bool
 	nilSpam bool
 
-	maxBatchSize   atomic.Uint64
-	defaultChainID uint64
+	maxBatchSize atomic.Uint64
 }
 
-func NewApp(
-	log *logging.Logger,
+func NewApp(log *logging.Logger,
 	vegaPaths paths.Paths,
 	config Config,
 	cancelFn func(),
@@ -261,7 +262,8 @@ func NewApp(
 	banking Banking,
 	broker Broker,
 	witness Witness,
-	evtfwd EvtForwarder,
+	primaryEvtForwarder,
+	secondaryEvtForwarder EvtForwarder,
 	exec ExecutionEngine,
 	ghandler *genesis.Handler,
 	gov GovernanceEngine,
@@ -313,7 +315,8 @@ func NewApp(
 		banking:                banking,
 		broker:                 broker,
 		witness:                witness,
-		evtfwd:                 evtfwd,
+		primaryEvtForwarder:    primaryEvtForwarder,
+		secondaryEvtForwarder:  secondaryEvtForwarder,
 		exec:                   exec,
 		ghandler:               ghandler,
 		gov:                    gov,
@@ -627,17 +630,28 @@ func (app *App) ensureConfig() {
 	if app.cfg.KeepCheckpointsMax < 1 {
 		app.cfg.KeepCheckpointsMax = 1
 	}
+
 	v := &proto.EthereumConfig{}
 	if err := app.netp.GetJSONStruct(netparams.BlockchainsEthereumConfig, v); err != nil {
 		return
 	}
-	cID, err := strconv.ParseUint(v.ChainId, 10, 64)
+	primaryChainID, err := strconv.ParseUint(v.ChainId, 10, 64)
 	if err != nil {
 		return
 	}
-	app.defaultChainID = cID
-	app.gov.OnChainIDUpdate(cID)
-	app.exec.OnChainIDUpdate(cID)
+	app.primaryChainID = primaryChainID
+	_ = app.gov.OnChainIDUpdate(primaryChainID)
+	_ = app.exec.OnChainIDUpdate(primaryChainID)
+
+	secondaryChainConfig := &proto.ArbitrumConfig{}
+	if err := app.netp.GetJSONStruct(netparams.BlockchainsArbitrumConfig, secondaryChainConfig); err != nil {
+		return
+	}
+	secondaryChainID, err := strconv.ParseUint(v.ChainId, 10, 64)
+	if err != nil {
+		return
+	}
+	app.secondaryChainID = secondaryChainID
 }
 
 // ReloadConf updates the internal configuration.
@@ -2693,7 +2707,7 @@ func (app *App) UpdatePartyProfile(ctx context.Context, tx abci.Tx) error {
 	return nil
 }
 
-func (app *App) OnBlockchainEthereumConfigUpdate(ctx context.Context, conf any) error {
+func (app *App) OnBlockchainEthereumConfigUpdate(_ context.Context, conf any) error {
 	cfg, err := types.EthereumConfigFromUntypedProto(conf)
 	if err != nil {
 		return err
@@ -2702,7 +2716,20 @@ func (app *App) OnBlockchainEthereumConfigUpdate(ctx context.Context, conf any) 
 	if err != nil {
 		return err
 	}
-	app.defaultChainID = cID
-	app.exec.OnChainIDUpdate(cID)
+	app.primaryChainID = cID
+	_ = app.exec.OnChainIDUpdate(cID)
 	return app.gov.OnChainIDUpdate(cID)
+}
+
+func (app *App) OnBlockchainArbitrumConfigUpdate(_ context.Context, conf any) error {
+	cfg, err := types.ArbitrumConfigFromUntypedProto(conf)
+	if err != nil {
+		return err
+	}
+	cID, err := strconv.ParseUint(cfg.ChainID(), 10, 64)
+	if err != nil {
+		return err
+	}
+	app.secondaryChainID = cID
+	return nil
 }

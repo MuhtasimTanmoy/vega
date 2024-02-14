@@ -66,7 +66,7 @@ func (e *Engine) EnableERC20(
 		logIndex:    txIndex,
 		txHash:      txHash,
 		chainID:     chainID,
-		bridgeView:  e.bridgeView,
+		bridgeView:  e.bridgeViewForChainID(chainID),
 	}
 	e.addAction(aa)
 	return e.witness.StartCheck(aa, e.onCheckDone, e.timeService.GetTimeNow().Add(defaultValidationDuration))
@@ -94,7 +94,7 @@ func (e *Engine) UpdateERC20(
 		logIndex:                txIndex,
 		txHash:                  txHash,
 		chainID:                 chainID,
-		bridgeView:              e.bridgeView,
+		bridgeView:              e.bridgeViewForChainID(chainID),
 	}
 	e.addAction(aa)
 	return e.witness.StartCheck(aa, e.onCheckDone, e.timeService.GetTimeNow().Add(defaultValidationDuration))
@@ -135,7 +135,7 @@ func (e *Engine) DepositERC20(
 		logIndex:    logIndex,
 		txHash:      txHash,
 		chainID:     chainID,
-		bridgeView:  e.bridgeView,
+		bridgeView:  e.bridgeViewForChainID(chainID),
 	}
 	e.addAction(aa)
 	e.deposits[dep.ID] = dep

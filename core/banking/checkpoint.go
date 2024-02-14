@@ -155,7 +155,7 @@ func (e *Engine) loadAssetActions(aa []*types.AssetAction) {
 			erc20BridgeStopped:      bridgeStopped,
 			erc20BridgeResumed:      bridgeResumed,
 			// this is needed every time now
-			bridgeView: e.bridgeView,
+			bridgeView: e.bridgeViewForChainID(v.ChainID),
 		}
 
 		e.log.Info("loadAssetActions",

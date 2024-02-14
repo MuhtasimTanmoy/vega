@@ -61,8 +61,10 @@ func New(
 	cancel func(),
 	stopBlockchain func() error,
 	nodewallets *nodewallets.NodeWallets,
-	ethClient *ethclient.Client,
-	ethConfirmation *ethclient.EthereumConfirmations,
+	primaryEthClient *ethclient.PrimaryClient,
+	secondaryEthClient *ethclient.SecondaryClient,
+	primaryEthConfirmation *ethclient.EthereumConfirmations,
+	secondaryEthConfirmation *ethclient.EthereumConfirmations,
 	blockchainClient *blockchain.Client,
 	vegaPaths paths.Paths,
 	stats *stats.Stats,
@@ -83,7 +85,18 @@ func New(
 	}()
 
 	svcs, err := newServices(
-		ctx, log, confWatcher, nodewallets, ethClient, ethConfirmation, blockchainClient, vegaPaths, stats, l2Clients,
+		ctx,
+		log,
+		confWatcher,
+		nodewallets,
+		primaryEthClient,
+		secondaryEthClient,
+		primaryEthConfirmation,
+		secondaryEthConfirmation,
+		blockchainClient,
+		vegaPaths,
+		stats,
+		l2Clients,
 	)
 	if err != nil {
 		return nil, err
@@ -100,7 +113,8 @@ func New(
 			svcs.banking,
 			svcs.broker,
 			svcs.witness,
-			svcs.eventForwarder,
+			svcs.primaryEventForwarder,
+			svcs.secondaryEventForwarder,
 			svcs.executionEngine,
 			svcs.genesisHandler,
 			svcs.governance,
@@ -152,6 +166,10 @@ func New(
 			Param:   netparams.BlockchainsEthereumConfig,
 			Watcher: proto.App.OnBlockchainEthereumConfigUpdate,
 		},
+		netparams.WatchParam{
+			Param:   netparams.BlockchainsArbitrumConfig,
+			Watcher: proto.App.OnBlockchainArbitrumConfigUpdate,
+		},
 	)
 
 	return proto, nil
@@ -180,7 +198,7 @@ func (n *Protocol) Protocol() semver.Version {
 }
 
 func (n *Protocol) GetEventForwarder() *evtforward.Forwarder {
-	return n.services.eventForwarder
+	return n.services.primaryEventForwarder
 }
 
 func (n *Protocol) GetTimeService() *vegatime.Svc {

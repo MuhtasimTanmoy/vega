@@ -18,6 +18,7 @@ package processor
 import (
 	"context"
 	"errors"
+	"strconv"
 	"strings"
 
 	"code.vegaprotocol.io/vega/core/datasource/external/ethcall"
@@ -56,8 +57,7 @@ func (app *App) processChainEvent(
 	// let the topology know who was the validator that forwarded the event
 	app.top.AddForwarder(pubkey)
 
-	// ack the new event then
-	if !app.evtfwd.Ack(ce) {
+	if !app.ackOnBridge(ce) {
 		// there was an error, or this was already acked
 		// but that's not a big issue we just going to ignore that.
 		return nil
@@ -142,12 +142,12 @@ func (app *App) processChainEvent(
 			return err
 		}
 
-		chainID := app.defaultChainID
+		chainID := app.primaryChainID
 		if callResult.SourceChainID != nil {
 			chainID = *callResult.SourceChainID
 		}
 
-		if chainID == app.defaultChainID {
+		if chainID == app.primaryChainID {
 			return app.oracles.EthereumOraclesVerifier.ProcessEthereumContractCallResult(callResult)
 		}
 
@@ -156,6 +156,25 @@ func (app *App) processChainEvent(
 
 	default:
 		return ErrUnsupportedChainEvent
+	}
+}
+
+func (app *App) ackOnBridge(ce *commandspb.ChainEvent) bool {
+	if erc20Evt := ce.GetErc20(); erc20Evt != nil {
+		return app.evtForwarderByChainID(erc20Evt.ChainId).Ack(ce)
+	} else if multisigEvt := ce.GetErc20Multisig(); multisigEvt != nil {
+		return app.evtForwarderByChainID(multisigEvt.ChainId).Ack(ce)
+	}
+
+	return app.primaryEvtForwarder.Ack(ce)
+}
+
+func (app *App) evtForwarderByChainID(chainID string) EvtForwarder {
+	switch chainID {
+	case strconv.FormatUint(app.primaryChainID, 10):
+		return app.primaryEvtForwarder
+	default:
+		return app.secondaryEvtForwarder
 	}
 }
 

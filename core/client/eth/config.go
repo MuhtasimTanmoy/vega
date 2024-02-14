@@ -25,10 +25,11 @@ import (
 const namedLogger = "ethClient"
 
 type Config struct {
-	Level           encoding.LogLevel `long:"log-level"`
-	RPCEndpoint     string
-	RetryDelay      encoding.Duration
-	EVMChainConfigs []EVMChainConfig
+	Level             encoding.LogLevel `long:"log-level"`
+	RPCEndpoint       string
+	SecondRPCEndpoint string
+	RetryDelay        encoding.Duration
+	EVMChainConfigs   []EVMChainConfig
 }
 
 type EVMChainConfig struct {

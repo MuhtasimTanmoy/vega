@@ -37,12 +37,14 @@ import (
 
 type testService struct {
 	*assets.Service
-	broker     *bmocks.MockInterface
-	bridgeView *mocks.MockERC20BridgeView
-	notary     *mocks.MockNotary
-	ctrl       *gomock.Controller
-	ethClient  *erc20mocks.MockETHClient
-	ethWallet  *nwethmocks.MockEthereumWallet
+	broker              *bmocks.MockInterface
+	primaryBridgeView   *mocks.MockERC20BridgeView
+	secondaryBridgeView *mocks.MockERC20BridgeView
+	notary              *mocks.MockNotary
+	ctrl                *gomock.Controller
+	primaryEthClient    *erc20mocks.MockETHClient
+	ethWallet           *nwethmocks.MockEthereumWallet
+	secondaryEthClient  *erc20mocks.MockETHClient
 }
 
 func TestAssets(t *testing.T) {
@@ -57,7 +59,7 @@ func testOffersSignaturesOnTickSuccess(t *testing.T) {
 	nodeSignature := []byte("node_signature")
 
 	service.broker.EXPECT().Send(gomock.Any()).Times(2)
-	service.ethClient.EXPECT().CollateralBridgeAddress().Times(1)
+	service.primaryEthClient.EXPECT().CollateralBridgeAddress().Times(1)
 	service.ethWallet.EXPECT().Algo().Times(1)
 	service.ethWallet.EXPECT().Sign(gomock.Any()).Return(nodeSignature, nil).Times(1)
 
@@ -127,20 +129,24 @@ func getTestService(t *testing.T) *testService {
 	conf := assets.NewDefaultConfig()
 	logger := logging.NewTestLogger()
 	ctrl := gomock.NewController(t)
-	ethClient := erc20mocks.NewMockETHClient(ctrl)
+	primaryEthClient := erc20mocks.NewMockETHClient(ctrl)
+	secondaryEthClient := erc20mocks.NewMockETHClient(ctrl)
 	broker := bmocks.NewMockInterface(ctrl)
-	bridgeView := mocks.NewMockERC20BridgeView(ctrl)
+	primaryBridgeView := mocks.NewMockERC20BridgeView(ctrl)
+	secondaryBridgeView := mocks.NewMockERC20BridgeView(ctrl)
 	notary := mocks.NewMockNotary(ctrl)
 	ethWallet := nwethmocks.NewMockEthereumWallet(ctrl)
 
-	service := assets.New(logger, conf, ethWallet, ethClient, broker, bridgeView, notary, true)
+	service := assets.New(logger, conf, ethWallet, primaryEthClient, secondaryEthClient, broker, primaryBridgeView, secondaryBridgeView, notary, true)
 	return &testService{
-		Service:    service,
-		broker:     broker,
-		ctrl:       ctrl,
-		bridgeView: bridgeView,
-		notary:     notary,
-		ethClient:  ethClient,
-		ethWallet:  ethWallet,
+		Service:             service,
+		broker:              broker,
+		ctrl:                ctrl,
+		primaryBridgeView:   primaryBridgeView,
+		secondaryBridgeView: secondaryBridgeView,
+		notary:              notary,
+		primaryEthClient:    primaryEthClient,
+		secondaryEthClient:  secondaryEthClient,
+		ethWallet:           ethWallet,
 	}
 }
