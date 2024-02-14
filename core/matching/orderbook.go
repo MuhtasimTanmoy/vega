@@ -266,7 +266,11 @@ func (b *OrderBook) RollbackConfirmation(conf *types.OrderConfirmation, orders [
 	for _, o := range orders {
 		// we don't have to go through the SubmitOrder flow here, because the order was already validated
 		// and we know this order will not uncross. Replace or add this order wherever needed
-		b.add(o)                          // simply adds order to the map, reassigns if the order exists already
+
+		if o.Status == types.OrderStatusFilled {
+			// if it has been filled it will have been taken off, now add it on
+			b.add(o)
+		}
 		b.getSide(o.Side).replaceOrder(o) // replace will replace, or append if the order was removed somehow
 	}
 	return nil
