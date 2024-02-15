@@ -39,7 +39,6 @@ var (
 
 	ErrDataPointAlreadyExistsAtTime = errors.New("data-point already exists at timestamp")
 	ErrDataPointIsTooOld            = errors.New("data-point is too old")
-	ErrInitialPeriodNotStarted      = errors.New("initial settlement period not started")
 )
 
 type dataPointSource = eventspb.FundingPeriodDataPoint_Source
@@ -605,10 +604,6 @@ func (p *Perpetual) UpdateAuctionState(ctx context.Context, enter bool) {
 
 // SubmitDataPoint this will add a data point produced internally by the core node.
 func (p *Perpetual) SubmitDataPoint(ctx context.Context, price *num.Uint, t int64) error {
-	// if !p.readyForData() {
-	// 	return ErrInitialPeriodNotStarted
-	// }
-
 	// since all external data and funding period triggers are to seconds-precision we also want to truncate
 	// internal times to seconds to avoid sub-second backwards intervals that are dependent on the order data arrives
 	t = time.Unix(0, t).Truncate(time.Second).UnixNano()
