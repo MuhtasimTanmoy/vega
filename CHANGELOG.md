@@ -12,14 +12,39 @@
 
 ### 🛠 Improvements
 
+- [10647](https://github.com/vegaprotocol/vega/issues/10647) - Add filter by game ID to transfers API.
+
+### 🐛 Fixes
+
+- [10631](https://github.com/vegaprotocol/vega/issues/10631) - Fix snapshot for `ethCallEvents`
+- [10643](https://github.com/vegaprotocol/vega/issues/10643) - Games `API` not showing quantum values and added filter for team and party.
+- [10649](https://github.com/vegaprotocol/vega/issues/10649) - Ensure markets do not get stuck in liquidity auction after protocol upgrade.
+- [10641](https://github.com/vegaprotocol/vega/issues/10641) - Fix panic in amend during auction for isolated margin.
+- [10656](https://github.com/vegaprotocol/vega/issues/10656) - Fix funding rates bounds can be null for perpetuals.
+- [10601](https://github.com/vegaprotocol/vega/issues/10601) - Fix epoch by block height API is slow.
+- [10299](https://github.com/vegaprotocol/vega/issues/10299) - Fix rewards transfers filter.
+- [10666](https://github.com/vegaprotocol/vega/issues/10666) - Fix game API is slow.
+- [10677](https://github.com/vegaprotocol/vega/issues/10677) - Fix validation of market proposer bonus to allow specifying/not specifying asset for metric for market proposer.
+
+## 0.74.1
+
+### 🚨 Breaking changes
+
+- [](https://github.com/vegaprotocol/vega/issues/xxx) -
+
+### 🗑️ Deprecation
+
+- [](https://github.com/vegaprotocol/vega/issues/xxx) -
+
+### 🛠 Improvements
+
 - [](https://github.com/vegaprotocol/vega/issues/xxx) -
 
 ### 🐛 Fixes
 
-- [](https://github.com/vegaprotocol/vega/issues/xxx) -
-
-
-## 0.74.0
+- [10611](https://github.com/vegaprotocol/vega/issues/10611) - Added internal config price to update `perps`.
+- [10615](https://github.com/vegaprotocol/vega/issues/10615) - Fix oracle scaling function in internal composite price.
+- [10621](https://github.com/vegaprotocol/vega/issues/10621) - Fix market activity tracker storing incorrect data for previous `epochMakerFeesPaid`.
 
 ### 🚨 Breaking changes
 
@@ -211,7 +236,10 @@
 - [10604](https://github.com/vegaprotocol/vega/issues/10604) - Register margin modes API subscriber.
 - [10595](https://github.com/vegaprotocol/vega/issues/10595) - Fix failed amends for isolated margin orders causing negative spread in console.
 - [10606](https://github.com/vegaprotocol/vega/issues/10606) - Party profiles `API` was not returning results.
-- [10611](https://github.com/vegaprotocol/vega/issues/10611) - Added internal config price to update `perps`.
+- [10625](https://github.com/vegaprotocol/vega/issues/10625) - Fix panic in update spot market.
+- [9244](https://github.com/vegaprotocol/vega/issues/9244) - fix unit tests to use spot markets.
+- [10625](https://github.com/vegaprotocol/vega/issues/10625) - Fix panic in update spot market.
+- [10649](https://github.com/vegaprotocol/vega/issues/10649) - Ensure markets do not get stuck in liquidity auction after protocol upgrade.
 
 ## 0.73.0
 
