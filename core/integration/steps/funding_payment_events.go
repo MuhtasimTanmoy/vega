@@ -71,12 +71,12 @@ func checkFundingPeriodEvent(evt events.FundingPeriod, row FundingPeriodEventWra
 
 	expectedStart, b := row.Start()
 	actualStart := fundingPeriod.GetStart()
-	if actualStart == 0 && b || !actualEqualsExpectedInSecondsOrNanos(actualStart, expectedStart) {
+	if b && !actualEqualsExpectedInSecondsOrNanos(actualStart, expectedStart) {
 		return false
 	}
 	expectedEnd, b := row.End()
 	actualEnd := fundingPeriod.GetEnd()
-	if actualEnd == 0 && b || !actualEqualsExpectedInSecondsOrNanos(actualEnd, expectedEnd) {
+	if b && !actualEqualsExpectedInSecondsOrNanos(actualEnd, expectedEnd) {
 		return false
 	}
 	expectedInternalTwap := row.InternalTWAP()
@@ -105,7 +105,7 @@ func checkFundingPeriodEvent(evt events.FundingPeriod, row FundingPeriodEventWra
 }
 
 func actualEqualsExpectedInSecondsOrNanos(actual, expected int64) bool {
-	return expected == actual || expected*1000000000 == actual
+	return expected == actual || expected*int64(time.Second) == actual
 }
 
 type FundingPeriodEventWrapper struct {
