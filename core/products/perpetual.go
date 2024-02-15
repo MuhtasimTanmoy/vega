@@ -863,8 +863,6 @@ func (p *Perpetual) calculateFundingPayment(t int64) *fundingData {
 	internalTWAP := p.internalTWAP.calculate(t)
 	externalTWAP := p.externalTWAP.calculate(t)
 
-	internalTWAP = p.internalTWAP.calculate(t)
-
 	if p.log.GetLevel() == logging.DebugLevel {
 		p.log.Debug("twap-calculations",
 			logging.MarketID(p.id),
