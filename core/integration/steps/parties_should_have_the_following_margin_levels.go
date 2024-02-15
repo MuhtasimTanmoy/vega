@@ -80,7 +80,7 @@ func ThePartiesShouldHaveTheFollowingMarginLevels(
 				return fmt.Errorf("can't parse the actual margin factor ('%s') into float: %v", levels.MarginFactor, err)
 			}
 			if actual != expected {
-				// hasError = true
+				hasError = true
 			}
 		}
 		if hasError {
