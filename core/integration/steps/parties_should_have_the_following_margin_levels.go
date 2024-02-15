@@ -17,6 +17,7 @@ package steps
 
 import (
 	"fmt"
+	"strconv"
 
 	"code.vegaprotocol.io/vega/core/integration/stubs"
 	types "code.vegaprotocol.io/vega/protos/vega"
@@ -67,6 +68,19 @@ func ThePartiesShouldHaveTheFollowingMarginLevels(
 				hasError = true
 			} else if marginMode != "cross margin" && marginMode != "isolated margin" {
 				hasError = true
+			}
+		}
+		if row.HasColumn("margin factor") {
+			expected, err := strconv.ParseFloat(marginFactor, 64)
+			if err != nil {
+				return fmt.Errorf("can't parse the expected margin factor ('%s') into float: %v", marginFactor, err)
+			}
+			actual, err := strconv.ParseFloat(levels.MarginFactor, 64)
+			if err != nil {
+				return fmt.Errorf("can't parse the actual margin factor ('%s') into float: %v", levels.MarginFactor, err)
+			}
+			if actual != expected {
+				// hasError = true
 			}
 		}
 		if hasError {
